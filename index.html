@@ -26,16 +26,18 @@
   --accent-soft: #d6ece5;
   --warn: #b7791f;
   --over: #c2412d;
+  --income: #1f7a3a;
+  --invest: #4a55c9;
   --font-display: "Avenir Next", system-ui, sans-serif;
   --font-body: system-ui, -apple-system, sans-serif;
   --font-num: ui-monospace, Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #0f1615; --surface: #18221f; --ink: #e5eeeb; --muted: #93a39f; --line: #2a3733;
-  --accent: #3fc29d; --accent-ink: #062019; --accent-soft: #1d3a32; --warn: #e3a646; --over: #ef7a64; color-scheme: dark } }
+  --accent: #3fc29d; --accent-ink: #062019; --accent-soft: #1d3a32; --warn: #e3a646; --over: #ef7a64; --income: #5fd38a; --invest: #8f98ff; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #0f1615; --surface: #18221f; --ink: #e5eeeb; --muted: #93a39f; --line: #2a3733;
-  --accent: #3fc29d; --accent-ink: #062019; --accent-soft: #1d3a32; --warn: #e3a646; --over: #ef7a64; color-scheme: dark }
+  --accent: #3fc29d; --accent-ink: #062019; --accent-soft: #1d3a32; --warn: #e3a646; --over: #ef7a64; --income: #5fd38a; --invest: #8f98ff; color-scheme: dark }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent }
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px) }
@@ -113,6 +115,19 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .budget-row input { text-align: right; font-family: var(--font-num); font-size: 1rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; width: 100% }
 .err { color: var(--over); font-size: .85rem; min-height: 1.2em }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important } }
+
+.flow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px }
+.flow div { display: grid; gap: 2px; min-width: 0; align-content: start }
+.flow b { font-family: var(--font-num); font-weight: 500; font-size: 1.15rem; overflow-wrap: anywhere }
+.flow .in b { color: var(--income) } .flow .inv b { color: var(--invest) }
+.stack { display: flex; height: 12px; border-radius: 99px; overflow: hidden; background: var(--accent-soft) }
+.stack i { display: block; height: 100% }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted) }
+.legend span { display: inline-flex; align-items: center; gap: 6px }
+.tag { font-size: .65rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600 }
+.card { background: var(--surface); border-radius: 16px; padding: 16px; display: grid; gap: 10px; border: 1px solid var(--line) }
+.amt.income { color: var(--income) } .amt.invest { color: var(--invest) }
+.seg.kinds { margin: 0 }
 </style>
 </head>
 <body>
@@ -123,7 +138,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   </div>
   <div class="banner" id="storeNote" hidden></div>
 
-  <div class="seg" role="group" aria-label="Budget period">
+  <div class="seg" role="group" aria-label="Period">
     <button type="button" data-p="week">Week</button>
     <button type="button" data-p="month">Month</button>
     <button type="button" data-p="year">Year</button>
@@ -136,43 +151,74 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 
   <section class="summary" id="summary"></section>
 
+  <section class="card" id="budgetCard"></section>
+
   <section class="section">
-    <div class="section-head"><h2>By category</h2><span class="small" id="catHint"></span></div>
+    <div class="section-head"><h2>Spending by category</h2><span class="small" id="catHint"></span></div>
     <div class="cats" id="cats"></div>
   </section>
 
   <section class="section">
-    <div class="section-head"><h2>Expenses</h2><span class="small" id="count"></span></div>
+    <div class="section-head"><h2>Investments</h2></div>
+    <div class="card" id="invest"></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><h2>Activity</h2><span class="small" id="count"></span></div>
     <div id="list" class="section"></div>
   </section>
 </div>
 
-<button class="fab" id="fab" type="button">+ Add expense</button>
+<button class="fab" id="fab" type="button">+ Add</button>
 
 <div class="sheet-bg" id="addSheet" hidden>
   <form class="sheet" id="addForm" novalidate>
-    <div class="section-head"><h2>New expense</h2><button type="button" class="link" data-close>Cancel</button></div>
+    <div class="section-head"><h2 id="addTitle">New expense</h2><button type="button" class="link" data-close>Cancel</button></div>
+    <div class="seg kinds" role="group" aria-label="Type">
+      <button type="button" data-kind="expense">Expense</button>
+      <button type="button" data-kind="income">Income</button>
+      <button type="button" data-kind="invest">Investment</button>
+    </div>
     <label class="amount-in"><span id="curSym">$</span><input id="amt" inputmode="decimal" autocomplete="off" placeholder="0.00" aria-label="Amount"></label>
-    <div class="field"><span class="label">Category</span><div class="chips" id="catChips"></div></div>
+    <div class="field" id="catField"><span class="label" id="catLabel">Category</span><div class="chips" id="catChips"></div></div>
+    <label class="field" id="acctField" hidden><span class="label">Account</span><input id="acct" list="acctList" placeholder="TFSA, RRSP, brokerage…" maxlength="40"><datalist id="acctList"></datalist></label>
     <div class="row2">
       <label class="field"><span class="label">Date</span><input type="date" id="date"></label>
-      <label class="field"><span class="label">Note</span><input id="note" placeholder="Coffee, gas…" maxlength="80"></label>
+      <label class="field"><span class="label">Note</span><input id="note" placeholder="Optional" maxlength="80"></label>
     </div>
     <div class="err" id="addErr"></div>
-    <button class="primary" type="submit">Save expense</button>
+    <button class="primary" type="submit" id="addSave">Save</button>
   </form>
 </div>
 
 <div class="sheet-bg" id="budSheet" hidden>
   <form class="sheet" id="budForm" novalidate>
-    <div class="section-head"><h2>Budgets &amp; backup</h2><button type="button" class="link" data-close>Cancel</button></div>
-    <p class="small" style="margin:0">Set a monthly amount per category. Weekly budgets use 12/52 of it and yearly budgets use 12×. Leave blank for no budget.</p>
-    <label class="field"><span class="label">Currency symbol</span><input id="currency" maxlength="3"></label>
+    <div class="section-head"><h2>Settings</h2><button type="button" class="link" data-close>Cancel</button></div>
+    <div class="field">
+      <span class="label">Your pay</span>
+      <p class="small" style="margin:0">What you usually take home. The app uses it as your expected income until you log actual pay.</p>
+      <div class="row2">
+        <input id="payAmt" inputmode="decimal" placeholder="Amount" aria-label="Pay amount">
+        <select id="payFreq" aria-label="How often">
+          <option value="weekly">Every week</option>
+          <option value="biweekly">Every 2 weeks</option>
+          <option value="semimonthly">Twice a month</option>
+          <option value="monthly">Every month</option>
+          <option value="yearly">Every year</option>
+        </select>
+      </div>
+    </div>
+    <label class="field"><span class="label">Monthly investing goal</span><input id="investGoal" inputmode="decimal" placeholder="Optional"></label>
+    <div class="field">
+      <span class="label">Monthly spending budgets</span>
+      <p class="small" style="margin:0">Weekly budgets use 12/52 of these and yearly budgets use 12×. Leave blank for no budget.</p>
+    </div>
     <div id="budRows" class="cats"></div>
-    <button class="primary" type="submit">Save budgets</button>
+    <label class="field"><span class="label">Currency symbol</span><input id="currency" maxlength="3"></label>
+    <button class="primary" type="submit">Save settings</button>
     <div class="field">
       <span class="label">Backup</span>
-      <p class="small" style="margin:0">Your expenses live only on this phone. Save a backup now and then (to Files or iCloud Drive) so you can restore them.</p>
+      <p class="small" style="margin:0">Everything lives only on this phone. Save a backup now and then (to Files or iCloud Drive) so you can restore it.</p>
       <div class="row2"><button type="button" class="ghost" id="exportBtn">Save backup</button>
         <label class="ghost" style="text-align:center;cursor:pointer">Restore backup<input type="file" id="importIn" accept="application/json,.json" hidden></label></div>
       <div class="err" id="backupMsg"></div>
@@ -192,11 +238,20 @@ const CATS = [
   { k: "fun", n: "Fun", c: "#b39a1d" },
   { k: "other", n: "Other", c: "#7f8c89" },
 ];
-const CAT = Object.fromEntries(CATS.map(c => [c.k, c]));
+const SOURCES = [
+  { k: "salary", n: "Paycheque", c: "var(--income)" },
+  { k: "side", n: "Side income", c: "var(--income)" },
+  { k: "gift", n: "Gift", c: "var(--income)" },
+  { k: "other-in", n: "Other", c: "var(--income)" },
+];
+const CAT = Object.fromEntries([...CATS, ...SOURCES].map(c => [c.k, c]));
 const FACTOR = { week: 12 / 52, month: 1, year: 12 };
+const PAY_PER_MONTH = { weekly: 52 / 12, biweekly: 26 / 12, semimonthly: 2, monthly: 1, yearly: 1 / 12 };
+const KIND_TITLE = { expense: "New expense", income: "New income", invest: "New investment" };
 
-let state = { expenses: [], settings: { currency: "$", monthly: {} }, period: "month", offset: 0, selCat: "groceries" };
+let state = { expenses: [], settings: { currency: "$", monthly: {}, pay: null, investGoal: 0 }, period: "month", offset: 0, kind: "expense", sel: { expense: "groceries", income: "salary" } };
 let store = null;
+const kindOf = e => e.kind === "income" || e.kind === "invest" ? e.kind : "expense";
 
 // ---------- dates ----------
 const pad = n => String(n).padStart(2, "0");
@@ -223,9 +278,10 @@ function label(period, r) {
   if (period === "month") return fmtD(r.a, { month: "long", year: "numeric" });
   return String(r.a.getFullYear());
 }
-const money = v => state.settings.currency + (Math.round(v * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money = v => (v < 0 ? "−" : "") + state.settings.currency + (Math.round(Math.abs(v) * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const sum = list => list.reduce((s, e) => s + e.amount, 0);
 
-// ---------- storage: claude db when available, this device otherwise ----------
+// ---------- storage: this device ----------
 function localStore() {
   const K = "pocket-ledger-v1";
   const read = () => { try { return JSON.parse(localStorage.getItem(K)) || {}; } catch { return {}; } };
@@ -233,7 +289,6 @@ function localStore() {
   let cb = () => {};
   const emit = () => { const d = read(); cb(d.expenses || [], d.settings); };
   return {
-    kind: "local",
     subscribe(f) { cb = f; emit(); },
     async addExpense(e) { const d = read(); (d.expenses ||= []).push(e); write(d); emit(); },
     async removeExpense(id) { const d = read(); d.expenses = (d.expenses || []).filter(x => x.id !== id); write(d); emit(); },
@@ -244,55 +299,89 @@ function showNote(html) { const n = document.getElementById("storeNote"); n.inne
 
 // ---------- render ----------
 const $ = id => document.getElementById(id);
-function inRange() {
-  const r = range(state.period, state.offset);
-  return { r, list: state.expenses.filter(e => e.date >= r.from && e.date <= r.to) };
-}
 function render() {
-  document.querySelectorAll(".seg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === state.period));
-  const { r, list } = inRange();
+  document.querySelectorAll(".seg button[data-p]").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === state.period));
+  const r = range(state.period, state.offset);
+  const list = state.expenses.filter(e => e.date >= r.from && e.date <= r.to);
+  const ex = list.filter(e => kindOf(e) === "expense"), inc = list.filter(e => kindOf(e) === "income"), inv = list.filter(e => kindOf(e) === "invest");
   $("when").textContent = label(state.period, r);
   $("next").disabled = state.offset >= 0;
   $("next").style.opacity = state.offset >= 0 ? .35 : 1;
 
   const f = FACTOR[state.period];
-  const byCat = {};
-  list.forEach(e => byCat[e.cat] = (byCat[e.cat] || 0) + e.amount);
-  const spent = list.reduce((s, e) => s + e.amount, 0);
-  const budget = Object.values(state.settings.monthly || {}).reduce((s, v) => s + (+v || 0), 0) * f;
+  const P = state.period;
+  const spent = sum(ex), invested = sum(inv), logged = sum(inc);
+  const pay = state.settings.pay;
+  const expected = pay?.amount ? pay.amount * PAY_PER_MONTH[pay.freq] * f : 0;
+  const usingExpected = !logged && expected > 0;
+  const income = logged || expected;
+  const leftover = income - spent - invested;
 
-  // days left only matter for the current period
-  const today = new Date(); today.setHours(0, 0, 0, 0);
-  const daysLeft = state.offset === 0 ? Math.round((r.b - today) / 864e5) + 1 : 0;
-  const left = budget - spent;
-  const pct = budget ? spent / budget : 0;
-  const tone = !budget ? "" : pct > 1 ? "over" : pct > .85 ? "warn" : "";
-  const pill = !budget ? `<span class="pill">No budget set</span>` : pct > 1 ? `<span class="pill over">Over by ${money(-left)}</span>` : pct > .85 ? `<span class="pill warn">${Math.round(pct * 100)}% used</span>` : `<span class="pill">On track</span>`;
-
+  // ---- cash flow ----
+  let pill;
+  if (!income) pill = `<span class="pill">Add your pay in Settings</span>`;
+  else if (leftover < 0) pill = `<span class="pill over">Short by ${money(-leftover)}</span>`;
+  else pill = `<span class="pill">In the green</span>`;
+  const w = v => income ? Math.max(0, Math.min(100, v / Math.max(income, spent + invested) * 100)) : 0;
   $("summary").innerHTML = `
-    <div class="section-head"><span class="label">Spent this ${state.period}</span>${pill}</div>
-    <div><span class="big">${money(spent)}</span>${budget ? ` <span class="of">of ${money(budget)}</span>` : ""}</div>
-    ${budget ? `<div class="bar ${tone}"><i style="width:${Math.min(100, pct * 100)}%"></i></div>` : ""}
-    <div class="stats">
-      <div><span class="label">${left >= 0 || !budget ? "Left" : "Over"}</span><b>${budget ? money(Math.abs(left)) : "—"}</b></div>
-      <div><span class="label">${daysLeft > 0 ? `Per day · ${daysLeft} days left` : "Daily average"}</span><b>${
-        daysLeft > 0 ? (budget ? money(Math.max(0, left) / daysLeft) : "—") : money(spent / (Math.round((r.b - r.a) / 864e5) + 1))}</b></div>
+    <div class="section-head"><span class="label">Money this ${P}</span>${pill}</div>
+    <div><span class="tag">${leftover < 0 ? "Overspent" : "Left over"}</span><div class="big" style="color:${leftover < 0 ? "var(--over)" : "var(--ink)"}">${income ? money(leftover) : money(-spent - invested)}</div></div>
+    ${income ? `<div class="stack" aria-hidden="true"><i style="width:${w(spent)}%;background:var(--warn)"></i><i style="width:${w(invested)}%;background:var(--invest)"></i><i style="width:${w(Math.max(0, leftover))}%;background:var(--accent)"></i></div>
+    <div class="legend"><span><i class="dot" style="background:var(--warn)"></i>Spent</span><span><i class="dot" style="background:var(--invest)"></i>Invested</span><span><i class="dot" style="background:var(--accent)"></i>Left over</span></div>` : ""}
+    <div class="flow">
+      <div class="in"><span class="label">Income${usingExpected ? " · expected" : ""}</span><b>${money(income)}</b>${logged && expected ? `<span class="small">${money(expected)} expected</span>` : ""}</div>
+      <div><span class="label">Spent</span><b>${money(spent)}</b></div>
+      <div class="inv"><span class="label">Invested</span><b>${money(invested)}</b></div>
+      <div><span class="label">Savings rate</span><b>${income ? Math.round(invested / income * 100) + "%" : "—"}</b><span class="small">invested ÷ income</span></div>
     </div>`;
 
+  // ---- spending budget ----
+  const budget = Object.values(state.settings.monthly || {}).reduce((s, v) => s + (+v || 0), 0) * f;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const daysLeft = state.offset === 0 ? Math.round((r.b - today) / 864e5) + 1 : 0;
+  const bLeft = budget - spent, pct = budget ? spent / budget : 0;
+  const tone = !budget ? "" : pct > 1 ? "over" : pct > .85 ? "warn" : "";
+  $("budgetCard").innerHTML = budget ? `
+    <div class="section-head"><h2>Spending budget</h2>${pct > 1 ? `<span class="pill over">Over by ${money(-bLeft)}</span>` : pct > .85 ? `<span class="pill warn">${Math.round(pct * 100)}% used</span>` : `<span class="pill">On track</span>`}</div>
+    <div class="num">${money(spent)} <span class="of">of ${money(budget)}</span></div>
+    <div class="bar ${tone}"><i style="width:${Math.min(100, pct * 100)}%"></i></div>
+    <div class="small">${bLeft >= 0 ? `${money(bLeft)} left` : `${money(-bLeft)} over`}${daysLeft > 0 && bLeft > 0 ? ` · ${money(bLeft / daysLeft)} a day for ${daysLeft} days` : ""}</div>`
+    : `<div class="section-head"><h2>Spending budget</h2><button type="button" class="link" data-open-settings>Set budgets</button></div><span class="small">No budgets yet. Set a monthly amount per category in Settings.</span>`;
+
+  // ---- categories ----
+  const byCat = {};
+  ex.forEach(e => byCat[e.cat] = (byCat[e.cat] || 0) + e.amount);
   const rows = CATS.map(c => ({ c, s: byCat[c.k] || 0, b: (+state.settings.monthly?.[c.k] || 0) * f }))
     .filter(x => x.s || x.b).sort((x, y) => y.s - x.s);
-  $("catHint").textContent = state.period === "month" ? "" : `budgets scaled from monthly`;
+  $("catHint").textContent = P === "month" ? "" : `budgets scaled from monthly`;
   $("cats").innerHTML = rows.length ? rows.map(({ c, s, b }) => {
     const p = b ? s / b : 0, t = !b ? "" : p > 1 ? "over" : p > .85 ? "warn" : "";
     return `<div class="cat"><div class="cat-row"><span><i class="dot" style="background:${c.c}"></i>${c.n}</span>
       <span class="num small">${money(s)}${b ? ` / ${money(b)}` : ""}</span></div>
       ${b ? `<div class="bar ${t}"><i style="width:${Math.min(100, p * 100)}%"></i></div>` : `<div class="bar"><i style="width:${spent ? s / spent * 100 : 0}%;background:${c.c};opacity:.6"></i></div>`}</div>`;
-  }).join("") : `<p class="small" style="margin:0">Nothing spent in this ${state.period} yet.</p>`;
+  }).join("") : `<p class="small" style="margin:0">Nothing spent in this ${P} yet.</p>`;
 
-  $("count").textContent = list.length ? `${list.length} in this ${state.period}` : "";
+  // ---- investments ----
+  const allInv = state.expenses.filter(e => kindOf(e) === "invest");
+  const goal = (+state.settings.investGoal || 0) * f;
+  const byAcct = {};
+  allInv.forEach(e => { const k = e.account || "Investments"; byAcct[k] = (byAcct[k] || 0) + e.amount; });
+  const accts = Object.entries(byAcct).sort((a, b) => b[1] - a[1]);
+  const gp = goal ? invested / goal : 0;
+  $("invest").innerHTML = `
+    <div class="flow">
+      <div class="inv"><span class="label">This ${P}</span><b>${money(invested)}</b>${goal ? `<span class="small">goal ${money(goal)}</span>` : ""}</div>
+      <div class="inv"><span class="label">Total put in</span><b>${money(sum(allInv))}</b><span class="small">all time</span></div>
+    </div>
+    ${goal ? `<div class="bar"><i style="width:${Math.min(100, gp * 100)}%;background:var(--invest)"></i></div>` : ""}
+    ${accts.length ? `<div class="cats">${accts.map(([a, v]) => `<div class="cat-row"><span>${esc(a)}</span><span class="num small">${money(v)}</span></div>`).join("")}</div>`
+      : `<span class="small">Log each deposit to your investment accounts with “+ Add”, then Investment.</span>`}`;
+
+  // ---- activity ----
+  $("count").textContent = list.length ? `${list.length} in this ${P}` : "";
   if (!state.expenses.length) {
-    $("list").innerHTML = `<div class="empty"><strong>No expenses yet</strong>
-      <span class="small">Tap “Add expense” after each purchase. Set monthly budgets per category and the app works out your weekly, monthly and yearly limits.</span>
+    $("list").innerHTML = `<div class="empty"><strong>Nothing logged yet</strong>
+      <span class="small">Start in Settings: enter your pay and monthly budgets. Then tap “+ Add” for each purchase, paycheque or investment deposit.</span>
       <button type="button" class="ghost" id="loadSample">Try it with example data</button></div>`;
     $("loadSample").onclick = loadSample;
     return;
@@ -302,18 +391,25 @@ function render() {
   const hasSample = state.expenses.some(e => e.sample);
   $("list").innerHTML = (hasSample ? `<div class="banner"><span>Example entries are marked. Remove them when you start for real.</span><button type="button" class="link" id="clearSample">Remove examples</button></div>` : "") +
     (Object.keys(days).length ? Object.entries(days).map(([d, es]) => `<div class="day">
-      <div class="day-head"><span class="label">${fmtD(parse(d), { weekday: "short", month: "short", day: "numeric" })}</span><span class="num small">${money(es.reduce((s, e) => s + e.amount, 0))}</span></div>
-      ${es.map(e => `<div class="item" data-id="${e.id}" role="button" tabindex="0" aria-label="${esc(CAT[e.cat]?.n)} ${money(e.amount)}. Tap for delete.">
-        <i class="dot" style="background:${CAT[e.cat]?.c}"></i>
-        <span class="note">${esc(e.note || CAT[e.cat]?.n || "")}${e.note ? ` <span class="small">· ${CAT[e.cat]?.n}</span>` : ""}${e.sample ? `<span class="sample-tag">example</span>` : ""}</span>
-        <span class="num amt">${money(e.amount)}</span><button type="button" class="del" data-del="${e.id}">Delete</button></div>`).join("")}
-    </div>`).join("") : `<p class="small" style="margin:0">No expenses in this ${state.period}.</p>`);
-  if (hasSample) $("clearSample").onclick = () => state.expenses.filter(e => e.sample).forEach(e => store.removeExpense(e.id));
+      <div class="day-head"><span class="label">${fmtD(parse(d), { weekday: "short", month: "short", day: "numeric" })}</span></div>
+      ${es.map(itemHTML).join("")}
+    </div>`).join("") : `<p class="small" style="margin:0">Nothing logged in this ${P}.</p>`);
+  if (hasSample) $("clearSample").onclick = async () => { for (const e of state.expenses.filter(e => e.sample)) await store.removeExpense(e.id); };
+}
+function itemHTML(e) {
+  const k = kindOf(e);
+  const name = k === "invest" ? (e.account || "Investment") : (CAT[e.cat]?.n || "Other");
+  const color = k === "invest" ? "var(--invest)" : (CAT[e.cat]?.c || "#7f8c89");
+  const sign = k === "income" ? "+" : k === "invest" ? "→ " : "";
+  return `<div class="item" data-id="${e.id}" role="button" tabindex="0" aria-label="${esc(name)} ${money(e.amount)}. Tap for delete.">
+    <i class="dot" style="background:${color}"></i>
+    <span class="note">${esc(e.note || name)}${e.note ? ` <span class="small">· ${esc(name)}</span>` : ""}${e.sample ? `<span class="sample-tag">example</span>` : ""}</span>
+    <span class="num amt ${k}">${sign}${money(e.amount)}</span><button type="button" class="del" data-del="${e.id}">Delete</button></div>`;
 }
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 // ---------- interactions ----------
-document.querySelectorAll(".seg button").forEach(b => b.onclick = () => { state.period = b.dataset.p; state.offset = 0; render(); });
+document.querySelectorAll(".seg button[data-p]").forEach(b => b.onclick = () => { state.period = b.dataset.p; state.offset = 0; render(); });
 $("prev").onclick = () => { state.offset--; render(); };
 $("next").onclick = () => { if (state.offset < 0) { state.offset++; render(); } };
 $("list").addEventListener("click", ev => {
@@ -323,53 +419,83 @@ $("list").addEventListener("click", ev => {
   if (it) { document.querySelectorAll(".item.open").forEach(x => x !== it && x.classList.remove("open")); it.classList.toggle("open"); }
 });
 $("list").addEventListener("keydown", ev => { if ((ev.key === "Enter" || ev.key === " ") && ev.target.classList.contains("item")) { ev.preventDefault(); ev.target.click(); } });
+document.addEventListener("click", ev => { if (ev.target.closest("[data-open-settings]")) $("openBudgets").click(); });
 
 function openSheet(id) { $(id).hidden = false; }
 document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => b.closest(".sheet-bg").hidden = true);
 document.querySelectorAll(".sheet-bg").forEach(bg => bg.addEventListener("click", e => { if (e.target === bg) bg.hidden = true; }));
 
-function drawChips() {
-  $("catChips").innerHTML = CATS.map(c => `<button type="button" class="chip" data-k="${c.k}" aria-pressed="${c.k === state.selCat}"><i class="dot" style="background:${c.c}"></i>${c.n}</button>`).join("");
+function drawAddForm() {
+  const k = state.kind;
+  document.querySelectorAll("[data-kind]").forEach(b => b.setAttribute("aria-pressed", b.dataset.kind === k));
+  $("addTitle").textContent = KIND_TITLE[k];
+  $("catField").hidden = k === "invest";
+  $("acctField").hidden = k !== "invest";
+  $("catLabel").textContent = k === "income" ? "Source" : "Category";
+  const opts = k === "income" ? SOURCES : CATS;
+  $("catChips").innerHTML = opts.map(c => `<button type="button" class="chip" data-k="${c.k}" aria-pressed="${c.k === state.sel[k]}"><i class="dot" style="background:${c.c}"></i>${c.n}</button>`).join("");
+  const accts = [...new Set(state.expenses.filter(e => kindOf(e) === "invest" && e.account).map(e => e.account))];
+  $("acctList").innerHTML = accts.map(a => `<option value="${esc(a)}"></option>`).join("");
+  $("addSave").textContent = k === "expense" ? "Save expense" : k === "income" ? "Save income" : "Save investment";
 }
-$("catChips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (b) { state.selCat = b.dataset.k; drawChips(); } });
+document.querySelectorAll("[data-kind]").forEach(b => b.onclick = () => { state.kind = b.dataset.kind; drawAddForm(); });
+$("catChips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (b) { state.sel[state.kind] = b.dataset.k; drawAddForm(); } });
 $("fab").onclick = () => {
   $("curSym").textContent = state.settings.currency;
-  $("amt").value = ""; $("note").value = ""; $("addErr").textContent = "";
+  $("amt").value = ""; $("note").value = ""; $("acct").value = ""; $("addErr").textContent = "";
   $("date").value = iso(new Date());
-  drawChips(); openSheet("addSheet"); setTimeout(() => $("amt").focus(), 50);
+  drawAddForm(); openSheet("addSheet"); setTimeout(() => $("amt").focus(), 50);
 };
 $("addForm").onsubmit = async e => {
   e.preventDefault();
   const amount = parseFloat($("amt").value.replace(",", "."));
   if (!(amount > 0)) { $("addErr").textContent = "Enter an amount above zero."; return; }
   if (!$("date").value) { $("addErr").textContent = "Pick a date."; return; }
-  const ex = { id: "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind: "expense", amount: Math.round(amount * 100) / 100, cat: state.selCat, note: $("note").value.trim(), date: $("date").value, ts: Date.now() };
+  const k = state.kind;
+  const ex = { id: "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind: k, amount: Math.round(amount * 100) / 100, note: $("note").value.trim(), date: $("date").value, ts: Date.now() };
+  if (k === "invest") ex.account = $("acct").value.trim() || "Investments"; else ex.cat = state.sel[k];
   $("addSheet").hidden = true;
-  try { await store.addExpense(ex); } catch { showNote("That expense didn't save. Try adding it again."); }
+  try { await store.addExpense(ex); } catch { showNote("That entry didn't save. Try adding it again."); }
 };
 
+const num = id => { const v = parseFloat($(id).value.replace(",", ".")); return v > 0 ? Math.round(v * 100) / 100 : 0; };
 $("openBudgets").onclick = () => {
-  $("currency").value = state.settings.currency;
+  const s = state.settings;
+  $("currency").value = s.currency;
+  $("payAmt").value = s.pay?.amount || "";
+  $("payFreq").value = s.pay?.freq || "biweekly";
+  $("investGoal").value = s.investGoal || "";
   $("budRows").innerHTML = CATS.map(c => `<label class="budget-row"><span style="display:flex;gap:8px;align-items:center"><i class="dot" style="background:${c.c}"></i>${c.n}</span>
-    <input id="bud-${c.k}" inputmode="decimal" placeholder="—" value="${state.settings.monthly?.[c.k] ?? ""}"></label>`).join("");
+    <input id="bud-${c.k}" inputmode="decimal" placeholder="—" value="${s.monthly?.[c.k] ?? ""}"></label>`).join("");
   openSheet("budSheet");
 };
 $("budForm").onsubmit = async e => {
   e.preventDefault();
   const monthly = {};
-  CATS.forEach(c => { const v = parseFloat($("bud-" + c.k).value.replace(",", ".")); if (v > 0) monthly[c.k] = Math.round(v * 100) / 100; });
+  CATS.forEach(c => { const v = num("bud-" + c.k); if (v) monthly[c.k] = v; });
+  const payAmt = num("payAmt");
   $("budSheet").hidden = true;
-  try { await store.saveSettings({ currency: $("currency").value.trim() || "$", monthly }); } catch { showNote("Budgets didn't save. Try again."); }
+  try {
+    await store.saveSettings({ currency: $("currency").value.trim() || "$", monthly,
+      pay: payAmt ? { amount: payAmt, freq: $("payFreq").value } : null, investGoal: num("investGoal") });
+  } catch { showNote("Settings didn't save. Try again."); }
 };
 
 async function loadSample() {
   const t = new Date(); const day = n => { const d = new Date(t); d.setDate(t.getDate() - n); return iso(d); };
   const rows = [[0, "groceries", 64.2, "Weekly shop"], [0, "dining", 6.5, "Coffee"], [1, "transport", 48, "Gas"], [2, "dining", 32.8, "Dinner out"],
     [3, "bills", 85, "Phone plan"], [4, "shopping", 39.99, "Shoes"], [6, "groceries", 52.75, ""], [8, "fun", 18, "Movie"], [10, "health", 22.4, "Pharmacy"], [12, "housing", 1250, "Rent"]];
-  for (const [i, [d, cat, amount, note]] of rows.entries())
-    await store.addExpense({ id: "s" + i + Date.now().toString(36), kind: "expense", amount, cat, note, date: day(d), ts: Date.now() - i, sample: true });
-  if (!Object.keys(state.settings.monthly || {}).length)
-    await store.saveSettings({ ...state.settings, monthly: { groceries: 450, dining: 150, transport: 200, housing: 1250, bills: 180, shopping: 100, fun: 80, health: 60 } });
+  let i = 0;
+  const add = e => store.addExpense({ id: "s" + (i++) + Date.now().toString(36), ts: Date.now() - i, sample: true, note: "", ...e });
+  for (const [d, cat, amount, note] of rows) await add({ kind: "expense", amount, cat, note, date: day(d) });
+  await add({ kind: "income", amount: 2150, cat: "salary", date: day(2) });
+  await add({ kind: "income", amount: 2150, cat: "salary", date: day(16) });
+  await add({ kind: "invest", amount: 300, account: "TFSA", date: day(2) });
+  await add({ kind: "invest", amount: 150, account: "RRSP", date: day(9) });
+  const s = state.settings;
+  await store.saveSettings({ ...s,
+    monthly: Object.keys(s.monthly || {}).length ? s.monthly : { groceries: 450, dining: 150, transport: 200, housing: 1250, bills: 180, shopping: 100, fun: 80, health: 60 },
+    pay: s.pay || { amount: 2150, freq: "biweekly" }, investGoal: s.investGoal || 500 });
 }
 
 // ---------- boot ----------
@@ -377,7 +503,7 @@ function attach(s) {
   store = s;
   s.subscribe((expenses, settings) => {
     state.expenses = expenses.map(e => ({ ...e, amount: +e.amount || 0 }));
-    if (settings) state.settings = { currency: settings.currency || "$", monthly: settings.monthly || {} };
+    if (settings) state.settings = { currency: settings.currency || "$", monthly: settings.monthly || {}, pay: settings.pay || null, investGoal: +settings.investGoal || 0 };
     render();
   });
 }
@@ -390,7 +516,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 
 // ---------- backup ----------
 $("exportBtn").onclick = () => {
-  const data = JSON.stringify({ app: "pocket-ledger", v: 1, expenses: state.expenses, settings: state.settings }, null, 1);
+  const data = JSON.stringify({ app: "pocket-ledger", v: 2, expenses: state.expenses, settings: state.settings }, null, 1);
   const file = new File([data], `pocket-ledger-backup-${iso(new Date())}.json`, { type: "application/json" });
   if (navigator.canShare?.({ files: [file] })) { navigator.share({ files: [file] }).catch(() => {}); return; }
   const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
