@@ -2,7 +2,7 @@
 
 A personal expense tracker with a budget plan built from your pay and goals, and receipt scanning. It runs as a home-screen web app on iPhone.
 
-**Open it:** https://itsumbatito.github.io/pocket-ledger/
+**Open it:** https://itsumbatito.github.io/Pocket-Ledger/
 
 To install on iPhone: open the link in Safari, tap Share, then **Add to Home Screen**.
 
