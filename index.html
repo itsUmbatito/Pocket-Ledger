@@ -164,6 +164,18 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .rc-x { grid-row: 1 / 3; grid-column: 3; background: none; border: 0; font-size: 1.4rem; color: var(--muted) }
 .rc-total { display: grid; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px }
 .rc-badge { font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; margin-right: 6px; vertical-align: 2px }
+.rc-badge { cursor: pointer; background: none; font-family: inherit }
+.rc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px }
+.rc-tile { display: grid; grid-template-rows: 120px auto; text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; padding: 0 }
+.rc-thumb { background: var(--accent-soft) center top / cover no-repeat }
+.rc-thumb.none { background: repeating-linear-gradient(135deg, var(--accent-soft) 0 8px, var(--surface) 8px 16px) }
+.rc-cap { display: grid; gap: 1px; padding: 8px 10px; min-width: 0 }
+.rc-cap strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem }
+.rv-img { width: 100%; max-height: 60vh; object-fit: contain; background: var(--surface); border: 1px solid var(--line); border-radius: 12px }
+.rv-cat { display: grid; gap: 2px; padding-block: 6px; border-bottom: 1px solid var(--line) }
+.rv-item { padding-left: 18px }
+#rvDelYes { color: var(--over); border-color: var(--over) }
+.chip-x { background: none; border: 0; padding: 0 0 0 4px; font-size: 1.1rem; line-height: 1; color: inherit }
 .spinner { width: 16px; height: 16px; border: 2.5px solid var(--accent-soft); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; flex: none }
 @keyframes spin { to { transform: rotate(360deg) } }
 </style>
@@ -202,6 +214,11 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   <section class="section" id="goalsSection">
     <div class="section-head"><h2>Goals</h2><button type="button" class="link" data-open-plan>Edit</button></div>
     <div class="card" id="goals"></div>
+  </section>
+
+  <section class="section" id="rcSection" hidden>
+    <div class="section-head"><h2>Receipts</h2><span class="small" id="rcCount"></span></div>
+    <div class="rc-grid" id="rcGrid"></div>
   </section>
 
   <section class="section">
@@ -252,6 +269,16 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   </form>
 </div>
 
+<!-- saved receipt -->
+<div class="sheet-bg" id="rvSheet" hidden>
+  <div class="sheet">
+    <div class="section-head"><h2 id="rvTitle">Receipt</h2><button type="button" class="link" data-close>Done</button></div>
+    <img id="rvImg" class="rv-img" alt="Saved receipt photo">
+    <div id="rvBody" class="rc-total"></div>
+    <div class="row2"><button type="button" class="ghost big-ghost" id="rvDel">Delete receipt</button><button type="button" class="ghost big-ghost" id="rvDelYes" hidden>Yes, delete it</button></div>
+  </div>
+</div>
+
 <!-- plan wizard -->
 <div class="sheet-bg" id="planSheet" hidden>
   <form class="sheet" id="planForm" novalidate>
@@ -278,6 +305,11 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
       <p class="small" style="margin:0">Your plan fills these in. Weekly budgets use 12/52 of each, yearly budgets 12×.</p>
     </div>
     <div id="budRows" class="cats"></div>
+    <div class="field">
+      <span class="label">Your own categories</span>
+      <div class="chips" id="customList"></div>
+      <div class="row2"><input id="newCat" maxlength="24" placeholder="e.g. Golf, Kids, Car repairs" aria-label="New category name"><button type="button" class="ghost" id="addCat">Add category</button></div>
+    </div>
     <label class="field"><span class="label">Currency symbol</span><input id="currency" maxlength="3"></label>
     <div class="field">
       <span class="label">Smart receipt reading (optional)</span>
@@ -287,7 +319,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     <button class="primary" type="submit">Save settings</button>
     <div class="field">
       <span class="label">Backup</span>
-      <p class="small" style="margin:0">Everything lives only on this phone. Save a backup now and then (to Files or iCloud Drive) so you can restore it. Backups never include your API key.</p>
+      <p class="small" style="margin:0">Everything lives only on this phone, receipt photos included. Save a backup now and then (to Files or iCloud Drive) so you can restore it. Backups include your photos but never your API key.</p>
       <div class="row2"><button type="button" class="ghost" id="exportBtn">Save backup</button>
         <label class="ghost" style="text-align:center;cursor:pointer">Restore backup<input type="file" id="importIn" accept="application/json,.json" hidden></label></div>
       <div class="err" id="backupMsg"></div>
@@ -296,32 +328,50 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 </div>
 
 <script>
-const CATS = [
+const BASE_CATS = [
   { k: "groceries", n: "Groceries", c: "#2f9e6f" },
-  { k: "dining", n: "Eating out", c: "#d9822b" },
+  { k: "dining", n: "Restaurants", c: "#d9822b" },
+  { k: "coffee", n: "Coffee & snacks", c: "#a0673a" },
   { k: "transport", n: "Transport", c: "#3b7dd8" },
   { k: "housing", n: "Rent & home", c: "#7a5cc7" },
-  { k: "bills", n: "Bills", c: "#4b8f99" },
+  { k: "bills", n: "Bills & subscriptions", c: "#4b8f99" },
   { k: "debt", n: "Debt payments", c: "#8a6d5a" },
+  { k: "household", n: "Household", c: "#5f8f3a" },
   { k: "shopping", n: "Shopping", c: "#c9507a" },
-  { k: "health", n: "Health", c: "#c94a3a" },
-  { k: "fun", n: "Fun", c: "#b39a1d" },
+  { k: "clothing", n: "Clothing", c: "#b5487f" },
+  { k: "electronics", n: "Electronics", c: "#4f6bd8" },
+  { k: "books", n: "Books", c: "#8e5bb5" },
+  { k: "health", n: "Health & pharmacy", c: "#c94a3a" },
+  { k: "personal", n: "Personal care", c: "#d46a8c" },
+  { k: "fun", n: "Fun & entertainment", c: "#b39a1d" },
+  { k: "travel", n: "Travel", c: "#2a9bb5" },
+  { k: "gifts", n: "Gifts", c: "#d35d4a" },
+  { k: "education", n: "Education", c: "#6a7fb5" },
+  { k: "pets", n: "Pets", c: "#9c7b3c" },
   { k: "other", n: "Other", c: "#7f8c89" },
 ];
+const CUSTOM_COLORS = ["#e07a5f", "#3d9970", "#6c5ce7", "#b8860b", "#0984e3", "#d63384", "#20a39e", "#8d6e63"];
 const SOURCES = [
   { k: "salary", n: "Paycheque", c: "var(--income)" },
   { k: "side", n: "Side income", c: "var(--income)" },
   { k: "gift", n: "Gift", c: "var(--income)" },
   { k: "other-in", n: "Other", c: "var(--income)" },
 ];
-const CAT = Object.fromEntries([...CATS, ...SOURCES].map(c => [c.k, c]));
+let CATS = BASE_CATS, CAT = {};
+function rebuildCats() {
+  const custom = state?.settings?.customCats || [];
+  const other = BASE_CATS.find(c => c.k === "other");
+  CATS = [...BASE_CATS.filter(c => c.k !== "other"), ...custom, other];
+  CAT = Object.fromEntries([...CATS, ...SOURCES].map(c => [c.k, c]));
+}
 const FACTOR = { week: 12 / 52, month: 1, year: 12 };
 const FREQS = [["weekly", "Every week", 52 / 12], ["biweekly", "Every 2 weeks", 26 / 12], ["semimonthly", "Twice a month", 2], ["monthly", "Every month", 1], ["yearly", "Every year", 1 / 12]];
 const PAY_PER_MONTH = Object.fromEntries(FREQS.map(f => [f[0], f[2]]));
 const KEY_STORE = "pocket-ledger-apikey";
 
-let state = { expenses: [], settings: { currency: "$", monthly: {}, pay: null, plan: null }, period: "month", offset: 0, kind: "expense", sel: { expense: "groceries", income: "salary" } };
+let state = { expenses: [], settings: { currency: "$", monthly: {}, pay: null, plan: null, customCats: [] }, period: "month", offset: 0, kind: "expense", sel: { expense: "groceries", income: "salary" } };
 let store = null;
+rebuildCats();
 const kindOf = e => e.kind === "income" || e.kind === "invest" ? e.kind : "expense";
 const visible = () => state.expenses.filter(e => kindOf(e) !== "invest");
 
@@ -360,6 +410,25 @@ const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slic
 const monthlyIncome = () => { const p = state.settings.pay; return p?.amount ? p.amount * PAY_PER_MONTH[p.freq] : 0; };
 const getKey = () => { try { return localStorage.getItem(KEY_STORE) || ""; } catch { return ""; } };
 
+// ---------- receipt photos: IndexedDB on this device ----------
+const photos = (() => {
+  let dbp = null;
+  const open = () => dbp ||= new Promise((res, rej) => {
+    const r = indexedDB.open("pocket-ledger-photos", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("photos");
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+  const tx = async (mode, fn) => { const db = await open(); return new Promise((res, rej) => { const t = db.transaction("photos", mode); const q = fn(t.objectStore("photos")); t.oncomplete = () => res(q?.result); t.onerror = () => rej(t.error); }); };
+  const urls = {};
+  return {
+    put: (id, blob) => tx("readwrite", s => s.put(blob, id)),
+    get: id => tx("readonly", s => s.get(id)),
+    del: id => { if (urls[id]) { URL.revokeObjectURL(urls[id]); delete urls[id]; } return tx("readwrite", s => s.delete(id)).catch(() => {}); },
+    keys: () => tx("readonly", s => s.getAllKeys()),
+    async url(id) { if (urls[id]) return urls[id]; const b = await this.get(id).catch(() => null); return b ? (urls[id] = URL.createObjectURL(b)) : ""; },
+  };
+})();
+
 // ---------- storage: this device ----------
 function localStore() {
   const K = "pocket-ledger-v1";
@@ -371,8 +440,13 @@ function localStore() {
     subscribe(f) { cb = f; emit(); },
     async addMany(list) { const d = read(); (d.expenses ||= []).push(...list); write(d); emit(); },
     async addExpense(e) { return this.addMany([e]); },
-    async removeExpense(id) { const d = read(); d.expenses = (d.expenses || []).filter(x => x.id !== id); write(d); emit(); },
-    async removeWhere(fn) { const d = read(); d.expenses = (d.expenses || []).filter(x => !fn(x)); write(d); emit(); },
+    async removeExpense(id) { return this.removeWhere(x => x.id === id); },
+    async removeWhere(fn) {
+      const d = read(); const gone = (d.expenses || []).filter(fn);
+      d.expenses = (d.expenses || []).filter(x => !fn(x)); write(d); emit();
+      // drop a receipt photo once nothing points at it
+      new Set(gone.map(x => x.receipt).filter(Boolean)).forEach(r => { if (!d.expenses.some(x => x.receipt === r)) photos.del(r); });
+    },
     async saveSettings(s) { const d = read(); d.settings = s; write(d); emit(); },
   };
 }
@@ -453,6 +527,17 @@ function render() {
       : `<div class="small">No goals yet. Set aside ${money0(plan.savings)} a month as savings.</div>`;
   }
 
+  // ---- receipts ----
+  const recs = {};
+  list.filter(e => e.receipt).forEach(e => (recs[e.receipt] ||= []).push(e));
+  const recList = Object.entries(recs).sort((a, b) => b[1][0].date.localeCompare(a[1][0].date));
+  $("rcSection").hidden = !recList.length;
+  $("rcCount").textContent = recList.length ? `${recList.length} in this ${P}` : "";
+  $("rcGrid").innerHTML = recList.map(([rid, es]) => `<button type="button" class="rc-tile" data-rcv="${rid}">
+    <span class="rc-thumb" data-thumb="${rid}"></span>
+    <span class="rc-cap"><strong>${esc(es[0].note || "Receipt")}</strong><span class="num">${money(sum(es))}</span><span class="small">${fmtD(parse(es[0].date), { month: "short", day: "numeric" })}</span></span></button>`).join("");
+  $("rcGrid").querySelectorAll("[data-thumb]").forEach(async el => { const u = await photos.url(el.dataset.thumb); if (u) el.style.backgroundImage = `url("${u}")`; else el.classList.add("none"); });
+
   // ---- activity ----
   $("count").textContent = list.length ? `${list.length} in this ${P}` : "";
   if (!all.length) {
@@ -477,7 +562,7 @@ function itemHTML(e) {
   const name = CAT[e.cat]?.n || "Other";
   return `<div class="item" data-id="${e.id}" role="button" tabindex="0" aria-label="${esc(name)} ${money(e.amount)}. Tap for delete.">
     <i class="dot" style="background:${CAT[e.cat]?.c || "#7f8c89"}"></i>
-    <span class="note">${e.receipt ? `<span class="rc-badge">receipt</span>` : ""}${esc(e.note || name)}${e.note ? ` <span class="small">· ${esc(name)}</span>` : ""}${e.sample ? `<span class="sample-tag">example</span>` : ""}</span>
+    <span class="note">${e.receipt ? `<button type="button" class="rc-badge" data-rcv="${e.receipt}">receipt</button>` : ""}${esc(e.note || name)}${e.note ? ` <span class="small">· ${esc(name)}</span>` : ""}${e.sample ? `<span class="sample-tag">example</span>` : ""}</span>
     <span class="num amt ${k}">${k === "income" ? "+" : ""}${money(e.amount)}</span><button type="button" class="del" data-del="${e.id}">Delete</button></div>`;
 }
 const addMonths = (d, n) => new Date(d.getFullYear(), d.getMonth() + Math.round(n), d.getDate());
@@ -487,6 +572,8 @@ document.querySelectorAll(".seg button[data-p]").forEach(b => b.onclick = () => 
 $("prev").onclick = () => { state.offset--; render(); };
 $("next").onclick = () => { if (state.offset < 0) { state.offset++; render(); } };
 $("list").addEventListener("click", ev => {
+  const v = ev.target.closest("[data-rcv]");
+  if (v) { openReceipt(v.dataset.rcv); return; }
   const del = ev.target.closest("[data-del]");
   if (del) { store.removeExpense(del.dataset.del); return; }
   const it = ev.target.closest(".item");
@@ -495,6 +582,7 @@ $("list").addEventListener("click", ev => {
 $("list").addEventListener("keydown", ev => { if ((ev.key === "Enter" || ev.key === " ") && ev.target.classList.contains("item")) { ev.preventDefault(); ev.target.click(); } });
 document.addEventListener("click", ev => { if (ev.target.closest("[data-open-plan]")) openWizard(); });
 $("openPlan").onclick = openWizard;
+$("rcGrid").addEventListener("click", ev => { const t = ev.target.closest("[data-rcv]"); if (t) openReceipt(t.dataset.rcv); });
 
 function openSheet(id) { $(id).hidden = false; }
 document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => b.closest(".sheet-bg").hidden = true);
@@ -516,7 +604,7 @@ $("fab").onclick = () => {
   $("curSym").textContent = state.settings.currency;
   $("amt").value = ""; $("note").value = ""; $("addErr").textContent = "";
   $("date").value = iso(new Date());
-  state.kind = "expense"; drawAddForm(); openSheet("addSheet");
+  state.kind = "expense"; drawAddForm(); openSheet("addSheet"); $("addForm").scrollTop = 0;
 };
 $("addForm").onsubmit = async e => {
   e.preventDefault();
@@ -531,8 +619,21 @@ $("addForm").onsubmit = async e => {
 
 // ---------- settings ----------
 $("payFreq").innerHTML = FREQS.map(f => `<option value="${f[0]}">${f[1]}</option>`).join("");
+let draftCustom = [];
+function drawCustom() {
+  $("customList").innerHTML = draftCustom.length ? draftCustom.map((c, i) => `<span class="chip"><i class="dot" style="background:${c.c}"></i>${esc(c.n)}<button type="button" class="chip-x" data-cx="${i}" aria-label="Remove ${esc(c.n)}">×</button></span>`).join("")
+    : `<span class="small">None yet. Add one below.</span>`;
+}
+$("customList").addEventListener("click", e => { const x = e.target.closest("[data-cx]"); if (x) { draftCustom.splice(+x.dataset.cx, 1); drawCustom(); } });
+$("addCat").onclick = () => {
+  const n = $("newCat").value.trim(); if (!n) return;
+  if ([...BASE_CATS, ...draftCustom].some(c => c.n.toLowerCase() === n.toLowerCase())) { $("newCat").value = ""; return; }
+  draftCustom.push({ k: "c-" + Date.now().toString(36), n, c: CUSTOM_COLORS[draftCustom.length % CUSTOM_COLORS.length], custom: true });
+  $("newCat").value = ""; drawCustom();
+};
 $("openBudgets").onclick = () => {
   const s = state.settings;
+  draftCustom = (s.customCats || []).map(c => ({ ...c })); drawCustom();
   $("currency").value = s.currency;
   $("payAmt").value = s.pay?.amount || "";
   $("payFreq").value = s.pay?.freq || "biweekly";
@@ -548,7 +649,7 @@ $("budForm").onsubmit = async e => {
   const payAmt = round2(toNum($("payAmt").value));
   try { const k = $("apiKey").value.trim(); k ? localStorage.setItem(KEY_STORE, k) : localStorage.removeItem(KEY_STORE); } catch {}
   $("budSheet").hidden = true;
-  try { await store.saveSettings({ ...state.settings, currency: $("currency").value.trim() || "$", monthly, pay: payAmt > 0 ? { amount: payAmt, freq: $("payFreq").value } : null }); }
+  try { await store.saveSettings({ ...state.settings, currency: $("currency").value.trim() || "$", monthly, customCats: draftCustom, pay: payAmt > 0 ? { amount: payAmt, freq: $("payFreq").value } : null }); }
   catch { showNote("Settings didn't save. Try again."); }
 };
 
@@ -656,7 +757,7 @@ function buildPlan() {
     }
   }
   const flex = Math.max(0, avail - savings);
-  const share = { groceries: .34, dining: .14, shopping: .14, fun: .14, health: .1, other: .14 };
+  const share = { groceries: .28, dining: .1, coffee: .03, household: .05, shopping: .07, clothing: .05, books: .02, health: .06, personal: .04, fun: .08, gifts: .04, travel: .06, other: .12 };
   const budgets = { housing: fixed.housing, bills: fixed.bills, transport: fixed.transport, debt: fixed.debt };
   Object.entries(share).forEach(([k, s]) => budgets[k] = flex * s);
   Object.keys(budgets).forEach(k => { budgets[k] = Math.round(budgets[k]); if (!budgets[k]) delete budgets[k]; });
@@ -687,6 +788,22 @@ $("planForm").onsubmit = async e => {
 };
 
 // ---------- receipts ----------
+async function openReceipt(rid) {
+  const es = visible().filter(e => e.receipt === rid);
+  if (!es.length) return;
+  $("rvTitle").textContent = es[0].note || "Receipt";
+  const u = await photos.url(rid);
+  $("rvImg").hidden = !u; if (u) $("rvImg").src = u;
+  $("rvBody").innerHTML = `<div class="small">${fmtD(parse(es[0].date), { weekday: "long", month: "long", day: "numeric", year: "numeric" })}${u ? "" : " · photo not on this phone"}</div>` +
+    es.map(e => `<div class="rv-cat"><div class="cat-row"><span><i class="dot" style="background:${CAT[e.cat]?.c || "#7f8c89"}"></i>${esc(CAT[e.cat]?.n || "Other")}</span><span class="num">${money(e.amount)}</span></div>
+      ${(e.items || []).map(i => `<div class="cat-row small rv-item"><span>${esc(i.name || "Item")}</span><span class="num">${money(i.amount)}</span></div>`).join("")}</div>`).join("") +
+    `<div class="cat-row"><strong>Total paid</strong><strong class="num">${money(sum(es))}</strong></div>`;
+  $("rvDel").hidden = false; $("rvDelYes").hidden = true;
+  $("rvDel").textContent = "Delete receipt";
+  $("rvDel").onclick = () => { $("rvDelYes").hidden = false; $("rvDel").textContent = "Keep it"; $("rvDel").onclick = () => openReceipt(rid); };
+  $("rvDelYes").onclick = async () => { $("rvSheet").hidden = true; await store.removeWhere(e => e.receipt === rid); };
+  openSheet("rvSheet");
+}
 $("scanBtn").onclick = () => $("receiptIn").click();
 $("receiptIn").onchange = async () => {
   const file = $("receiptIn").files[0]; $("receiptIn").value = "";
@@ -696,9 +813,9 @@ $("receiptIn").onchange = async () => {
   const url = URL.createObjectURL(file); $("rcImg").src = url;
   openSheet("rcSheet");
   const status = t => $("rcStatus").innerHTML = t;
-  let result;
+  let result, jpeg = null;
   try {
-    const jpeg = await shrink(file, 1600);
+    jpeg = await shrink(file, 1600);
     if (getKey()) { status(`<span class="spinner"></span> Claude is reading your receipt…`); result = await readWithClaude(jpeg); }
     else { status(`<span class="spinner"></span> Reading your receipt…<br><span class="small">The first scan loads the reader, so it can take a moment.</span>`); result = await readOnPhone(jpeg, p => status(`<span class="spinner"></span> Reading your receipt… ${Math.round(p * 100)}%`)); }
   } catch (e) {
@@ -707,7 +824,7 @@ $("receiptIn").onchange = async () => {
   }
   if (result.items.length || result.total) status(`<span class="small">Check the lines below and fix anything that looks wrong.</span>`);
   else if (!$("rcStatus").querySelector(".err")) status(`<span class="err">Couldn't find any prices. Try a flatter, brighter photo, or fill it in below.</span>`);
-  rc = { ...result, items: result.items.length ? result.items : [{ name: result.merchant || "", amount: result.total || "", cat: guessCat(result.merchant, "") }] };
+  rc = { ...result, blob: jpeg || file, items: result.items.length ? result.items : [{ name: result.merchant || "", amount: result.total || "", cat: guessCat(result.merchant, "") }] };
   $("rcStore").value = rc.merchant || "";
   $("rcDate").value = /^\d{4}-\d{2}-\d{2}$/.test(rc.date || "") ? rc.date : iso(new Date());
   drawRcItems(); $("rcBody").hidden = false;
@@ -749,7 +866,9 @@ $("rcForm").onsubmit = async e => {
     note: store_ || its.map(i => i.name).filter(Boolean).slice(0, 2).join(", "),
     items: its.map(i => ({ name: i.name, amount: round2(i.amount) })),
   }));
+  entries.forEach(en => en.receiptTotal = round2(itemsSum * scale));
   $("rcSheet").hidden = true;
+  try { await photos.put(rid, rc.blob); } catch { showNote("The expense saved, but the receipt photo couldn't be stored on this phone."); }
   try { await store.addMany(entries); } catch { showNote("The receipt didn't save. Try again."); }
 };
 
@@ -789,7 +908,7 @@ async function readWithClaude(blob) {
         { type: "text", text: `Read this receipt for a personal expense tracker.
 merchant: the store or restaurant name. date: purchase date as YYYY-MM-DD, or "" if not shown. total: the final amount paid, including tax and tip.
 items: each purchased line with its price (after any line discount). Leave out subtotal, tax, tip, total, payment and change lines.
-category for each item, one of: ${CATS.map(c => `${c.k} (${c.n})`).join(", ")}. At a restaurant, cafe or bar, every item is "dining". Food from a grocery store is "groceries". Household goods, clothes and electronics are "shopping". Gas and parking are "transport". Medicine and pharmacy items are "health".
+category for each item, one of: ${CATS.map(c => `${c.k} (${c.n})`).join(", ")}. At a restaurant or bar, every item is "dining"; at a coffee shop, "coffee". Food from a grocery store is "groceries". Cleaning and kitchen supplies are "household". Books and magazines are "books". Clothes and shoes are "clothing". Gadgets, cables and devices are "electronics". Gas, parking and transit are "transport". Medicine and pharmacy items are "health"; shampoo, makeup and toiletries are "personal". Pick a custom category when it clearly fits.
 If the photo isn't a receipt, return empty items and total 0.` },
       ] }],
     }),
@@ -823,20 +942,36 @@ async function readOnPhone(blob, onProgress) {
   return parseReceiptText(data.text || "");
 }
 const MERCHANT_CATS = [
-  [/restaurant|resto|cafe|café|coffee|starbucks|tim horton|mcdonald|burger|pizza|sushi|grill|bistro|bar\b|pub\b|kitchen|diner|taco|subway|wendy|a&w|kfc|popeyes|chipotle|thai|pho|ramen|bakery|boulangerie/i, "dining"],
+  [/starbucks|tim horton|second cup|coffee|café|cafe|espresso|dunkin|bakery|boulangerie/i, "coffee"],
+  [/restaurant|resto|mcdonald|burger|pizza|sushi|grill|bistro|bar\b|pub\b|kitchen|diner|taco|subway|wendy|a&w|kfc|popeyes|chipotle|thai|pho|ramen|steakhouse|keg\b/i, "dining"],
   [/grocery|grocer|market|loblaw|no frills|sobeys|metro\b|safeway|kroger|whole foods|food basics|freshco|iga\b|superstore|trader joe|aldi|maxi|provigo|save.?on|fortinos|zehrs/i, "groceries"],
+  [/indigo|chapters|book|barnes|coles\b|kobo|audible/i, "books"],
   [/shell|esso|petro|chevron|husky|gas bar|fuel|parking|uber|lyft|transit|presto/i, "transport"],
   [/pharma|drug|shoppers|rexall|jean coutu|london drugs|walgreens|cvs|clinic|dental/i, "health"],
+  [/sephora|salon|barber|spa\b|nail/i, "personal"],
   [/cinema|theatre|theater|cineplex|steam|playstation|xbox|ticket/i, "fun"],
-  [/amazon|best buy|winners|h&m|zara|ikea|canadian tire|home depot|dollarama|marshalls|old navy|gap\b|apple store/i, "shopping"],
+  [/best buy|apple store|the source|staples|memory express/i, "electronics"],
+  [/winners|h&m|zara|old navy|gap\b|uniqlo|marshalls|lululemon|foot locker|aritzia/i, "clothing"],
+  [/petsmart|pet valu|petco/i, "pets"],
+  [/air canada|westjet|airbnb|hotel|expedia|booking\.com/i, "travel"],
+  [/ikea|home depot|canadian tire|dollarama|home sense|homesense|rona\b|lowe/i, "household"],
+  [/amazon|walmart|costco|target/i, "shopping"],
 ];
 const ITEM_CATS = [
-  [/milk|bread|egg|cheese|yogurt|butter|apple|banana|fruit|veg|chicken|beef|pork|fish|rice|pasta|cereal|juice|coffee|tea|snack|chips|meat|produce|tomato|potato|onion|lettuce|berr|flour|sugar|oil|sauce|soup|frozen|organic|deli/i, "groceries"],
-  [/shampoo|hand soap|tooth|vitamin|tylenol|advil|medic|bandage|pharm|rx\b/i, "health"],
-  [/dish|shirt|pant|sock|shoe|towel|lamp|cable|charger|batter|kitchenware|detergent|paper towel|toilet|cleaner|trash bag/i, "shopping"],
+  [/book|novel|paperback|hardcover|magazine/i, "books"],
+  [/milk|bread|egg|cheese|yogurt|butter|apple|banana|fruit|veg|chicken|beef|pork|fish|rice|pasta|cereal|juice|tea\b|snack|chips|meat|produce|tomato|potato|onion|lettuce|berr|flour|sugar|oil|sauce|soup|frozen|organic|deli/i, "groceries"],
+  [/dish|detergent|paper towel|toilet|cleaner|trash bag|sponge|bleach|foil|ziploc/i, "household"],
+  [/shampoo|conditioner|hand soap|tooth|deodorant|razor|lotion|makeup|cosmetic/i, "personal"],
+  [/vitamin|tylenol|advil|medic|bandage|pharm|rx\b/i, "health"],
+  [/shirt|pant|jean|sock|shoe|jacket|dress|hoodie/i, "clothing"],
+  [/cable|charger|batter|headphone|usb|hdmi|phone case/i, "electronics"],
+  [/dog|cat food|litter|pet/i, "pets"],
+  [/gift card|card\b.*greeting|wrapping/i, "gifts"],
   [/gas|fuel|unleaded|diesel|parking/i, "transport"],
 ];
+const customGuess = text => (state.settings.customCats || []).find(c => new RegExp("\\b" + c.n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(text || ""))?.k;
 function guessCat(merchant, item) {
+  const cu = customGuess(item) || customGuess(merchant); if (cu) return cu;
   for (const [re, c] of MERCHANT_CATS) if (re.test(merchant || "")) { if (c !== "groceries" || !item) return c; break; }
   for (const [re, c] of ITEM_CATS) if (re.test(item || "")) return c;
   for (const [re, c] of MERCHANT_CATS) if (re.test(merchant || "")) return c;
@@ -864,7 +999,7 @@ function parseReceiptText(text) {
     const name = l.slice(0, m.index).replace(/^[\d\s#x@*]+/, "").replace(/\s+\d+\s*@.*$/, "").trim().slice(0, 40);
     items.push({ name, amount: amt, cat: guessCat(merchant, name) });
   }
-  const isDining = guessCat(merchant, "") === "dining";
+  const isDining = ["dining", "coffee"].includes(guessCat(merchant, ""));
   let out = items;
   if (isDining || !items.length) out = (total || items.length) ? [{ name: merchant || "Receipt", amount: total || sum(items), cat: guessCat(merchant, "") }] : [];
   if (!total) total = sum(out);
@@ -886,7 +1021,8 @@ function attach(s) {
   store = s;
   s.subscribe((expenses, settings) => {
     state.expenses = expenses.map(e => ({ ...e, amount: +e.amount || 0 }));
-    if (settings) state.settings = { currency: settings.currency || "$", monthly: settings.monthly || {}, pay: settings.pay || null, plan: settings.plan || null };
+    if (settings) state.settings = { currency: settings.currency || "$", monthly: settings.monthly || {}, pay: settings.pay || null, plan: settings.plan || null, customCats: settings.customCats || [] };
+    rebuildCats();
     render();
   });
 }
@@ -899,8 +1035,10 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catc
 if (!state.settings.plan) openWizard();
 
 // ---------- backup ----------
-$("exportBtn").onclick = () => {
-  const data = JSON.stringify({ app: "pocket-ledger", v: 3, expenses: state.expenses, settings: state.settings }, null, 1);
+$("exportBtn").onclick = async () => {
+  const pics = {};
+  for (const id of await photos.keys().catch(() => [])) { const b = await photos.get(id); if (b) pics[id] = await blobToB64(b); }
+  const data = JSON.stringify({ app: "pocket-ledger", v: 4, expenses: state.expenses, settings: state.settings, photos: pics });
   const file = new File([data], `pocket-ledger-backup-${iso(new Date())}.json`, { type: "application/json" });
   if (navigator.canShare?.({ files: [file] })) { navigator.share({ files: [file] }).catch(() => {}); return; }
   const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
@@ -910,6 +1048,7 @@ $("importIn").onchange = async () => {
   try {
     const d = JSON.parse(await f.text());
     if (d.app !== "pocket-ledger" || !Array.isArray(d.expenses)) throw 0;
+    for (const [id, b64] of Object.entries(d.photos || {})) await photos.put(id, await (await fetch("data:image/jpeg;base64," + b64)).blob());
     localStorage.setItem("pocket-ledger-v1", JSON.stringify({ expenses: d.expenses, settings: d.settings }));
     location.reload();
   } catch { $("backupMsg").textContent = "That file isn't a Pocket Ledger backup."; }
