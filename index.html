@@ -119,7 +119,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .flow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 12px }
 .flow div { display: grid; gap: 2px; min-width: 0; align-content: start }
 .flow b { font-family: var(--font-num); font-weight: 500; font-size: 1.15rem; overflow-wrap: anywhere }
-.flow .in b { color: var(--income) } .flow .inv b { color: var(--invest) }
+.flow .in b { color: var(--income) }
 .stack { display: flex; height: 12px; border-radius: 99px; overflow: hidden; background: var(--accent-soft) }
 .stack i { display: block; height: 100% }
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--muted) }
@@ -128,13 +128,54 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .card { background: var(--surface); border-radius: 16px; padding: 16px; display: grid; gap: 10px; border: 1px solid var(--line) }
 .amt.income { color: var(--income) } .amt.invest { color: var(--invest) }
 .seg.kinds { margin: 0 }
+
+.top-actions { display: flex; gap: 6px }
+.seg.two { grid-template-columns: 1fr 1fr }
+.scan { display: flex; gap: 14px; align-items: center; text-align: left; background: var(--surface); border: 1.5px dashed var(--accent); border-radius: 14px; padding: 14px 16px; width: 100% }
+.scan-icon { flex: none; width: 34px; height: 28px; border: 2.5px solid var(--accent); border-radius: 7px; position: relative }
+.scan-icon::before { content: ""; position: absolute; width: 11px; height: 11px; border: 2.5px solid var(--accent); border-radius: 50%; left: 50%; top: 50%; transform: translate(-50%, -50%) }
+.scan-icon::after { content: ""; position: absolute; width: 9px; height: 4px; background: var(--accent); border-radius: 2px 2px 0 0; left: 5px; top: -6px }
+.plan-cta { display: grid; gap: 2px; text-align: left; background: var(--accent-soft); border: 0; border-radius: 12px; padding: 12px 14px; color: var(--ink) }
+.goal { display: grid; gap: 2px; padding-block: 4px }
+.goal + .goal { border-top: 1px solid var(--line); padding-top: 10px }
+.goal-edit { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px }
+.goal-edit input { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; width: 100% }
+.goal-edit .goal-name { font-weight: 600; border-color: transparent; padding-inline: 0 }
+.wz { display: grid; gap: 14px }
+.wz-q { font-size: 1.35rem; line-height: 1.2; text-wrap: balance }
+.wz .small { margin: 0 }
+.wz .budget-row { grid-template-columns: 1fr 110px }
+.wz-actions { position: sticky; bottom: calc(-22px - env(safe-area-inset-bottom, 0px)); background: var(--bg); padding-block: 10px calc(22px + env(safe-area-inset-bottom, 0px)); margin-bottom: calc(-22px - env(safe-area-inset-bottom, 0px)) }
+.stackcol { display: grid !important; gap: 0 }
+.big-ghost { border-radius: 12px; font-size: 1rem; padding: 14px }
+.plan-split { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px }
+.plan-split .stack { margin-top: 4px }
+.wz .field .cat-row { padding-block: 4px }
+.warn-banner { color: var(--ink); border-color: var(--warn) }
+.rc-top { display: grid; grid-template-columns: 72px 1fr; gap: 12px; align-items: center }
+.rc-top img { width: 72px; height: 96px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line); background: var(--surface) }
+.rc-status { font-size: .9rem; display: flex; gap: 8px; align-items: center; flex-wrap: wrap }
+.rc-items { display: grid; gap: 8px }
+.rc-row { display: grid; grid-template-columns: 1fr 84px 32px; gap: 6px; align-items: center }
+.rc-row select { grid-column: 1 / 3 }
+.rc-row input, .rc-row select { font: inherit; font-size: .95rem; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; width: 100%; min-width: 0 }
+.rc-row .rc-amt { text-align: right; font-family: var(--font-num) }
+.rc-row + .rc-row { border-top: 1px solid var(--line); padding-top: 8px }
+.rc-x { grid-row: 1 / 3; grid-column: 3; background: none; border: 0; font-size: 1.4rem; color: var(--muted) }
+.rc-total { display: grid; gap: 4px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px }
+.rc-badge { font-size: .62rem; text-transform: uppercase; letter-spacing: .06em; color: var(--accent); border: 1px solid currentColor; border-radius: 4px; padding: 0 4px; margin-right: 6px; vertical-align: 2px }
+.spinner { width: 16px; height: 16px; border: 2.5px solid var(--accent-soft); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; flex: none }
+@keyframes spin { to { transform: rotate(360deg) } }
 </style>
 </head>
 <body>
 <div class="wrap" id="app">
   <div class="top">
     <h1>Pocket Ledger</h1>
-    <button class="ghost" id="openBudgets" type="button">Settings</button>
+    <div class="top-actions">
+      <button class="ghost" id="openPlan" type="button">My plan</button>
+      <button class="ghost" id="openBudgets" type="button">Settings</button>
+    </div>
   </div>
   <div class="banner" id="storeNote" hidden></div>
 
@@ -158,9 +199,9 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
     <div class="cats" id="cats"></div>
   </section>
 
-  <section class="section">
-    <div class="section-head"><h2>Investments</h2></div>
-    <div class="card" id="invest"></div>
+  <section class="section" id="goalsSection">
+    <div class="section-head"><h2>Goals</h2><button type="button" class="link" data-open-plan>Edit</button></div>
+    <div class="card" id="goals"></div>
   </section>
 
   <section class="section">
@@ -170,18 +211,19 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 </div>
 
 <button class="fab" id="fab" type="button">+ Add</button>
+<input type="file" id="receiptIn" accept="image/*" capture="environment" hidden>
 
+<!-- add entry -->
 <div class="sheet-bg" id="addSheet" hidden>
   <form class="sheet" id="addForm" novalidate>
     <div class="section-head"><h2 id="addTitle">New expense</h2><button type="button" class="link" data-close>Cancel</button></div>
-    <div class="seg kinds" role="group" aria-label="Type">
+    <div class="seg kinds two" role="group" aria-label="Type">
       <button type="button" data-kind="expense">Expense</button>
       <button type="button" data-kind="income">Income</button>
-      <button type="button" data-kind="invest">Investment</button>
     </div>
+    <button type="button" class="scan" id="scanBtn"><span class="scan-icon" aria-hidden="true"></span><span><strong>Scan a receipt</strong><br><span class="small">Take a photo and the app fills it in</span></span></button>
     <label class="amount-in"><span id="curSym">$</span><input id="amt" inputmode="decimal" autocomplete="off" placeholder="0.00" aria-label="Amount"></label>
-    <div class="field" id="catField"><span class="label" id="catLabel">Category</span><div class="chips" id="catChips"></div></div>
-    <label class="field" id="acctField" hidden><span class="label">Account</span><input id="acct" list="acctList" placeholder="TFSA, RRSP, brokerage…" maxlength="40"><datalist id="acctList"></datalist></label>
+    <div class="field"><span class="label" id="catLabel">Category</span><div class="chips" id="catChips"></div></div>
     <div class="row2">
       <label class="field"><span class="label">Date</span><input type="date" id="date"></label>
       <label class="field"><span class="label">Note</span><input id="note" placeholder="Optional" maxlength="80"></label>
@@ -191,34 +233,61 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
   </form>
 </div>
 
+<!-- receipt review -->
+<div class="sheet-bg" id="rcSheet" hidden>
+  <form class="sheet" id="rcForm" novalidate>
+    <div class="section-head"><h2>Receipt</h2><button type="button" class="link" data-close>Cancel</button></div>
+    <div class="rc-top"><img id="rcImg" alt="Your receipt photo"><div class="rc-status" id="rcStatus"></div></div>
+    <div id="rcBody" hidden>
+      <div class="row2">
+        <label class="field"><span class="label">Store</span><input id="rcStore" maxlength="60"></label>
+        <label class="field"><span class="label">Date</span><input type="date" id="rcDate"></label>
+      </div>
+      <div class="field"><span class="label">Items</span><div id="rcItems" class="rc-items"></div>
+        <button type="button" class="link" id="rcAddItem" style="justify-self:start">+ Add a line</button></div>
+      <div class="rc-total" id="rcTotal"></div>
+      <div class="err" id="rcErr"></div>
+      <button class="primary" type="submit">Save to expenses</button>
+    </div>
+  </form>
+</div>
+
+<!-- plan wizard -->
+<div class="sheet-bg" id="planSheet" hidden>
+  <form class="sheet" id="planForm" novalidate>
+    <div class="section-head"><span class="label" id="wzStep"></span><button type="button" class="link" data-close>Close</button></div>
+    <div id="wzBody" class="wz"></div>
+    <div class="err" id="wzErr"></div>
+    <div class="row2 wz-actions"><button type="button" class="ghost big-ghost" id="wzBack">Back</button><button type="submit" class="primary" id="wzNext">Next</button></div>
+  </form>
+</div>
+
+<!-- settings -->
 <div class="sheet-bg" id="budSheet" hidden>
   <form class="sheet" id="budForm" novalidate>
     <div class="section-head"><h2>Settings</h2><button type="button" class="link" data-close>Cancel</button></div>
     <div class="field">
       <span class="label">Your pay</span>
-      <p class="small" style="margin:0">What you usually take home. The app uses it as your expected income until you log actual pay.</p>
       <div class="row2">
         <input id="payAmt" inputmode="decimal" placeholder="Amount" aria-label="Pay amount">
-        <select id="payFreq" aria-label="How often">
-          <option value="weekly">Every week</option>
-          <option value="biweekly">Every 2 weeks</option>
-          <option value="semimonthly">Twice a month</option>
-          <option value="monthly">Every month</option>
-          <option value="yearly">Every year</option>
-        </select>
+        <select id="payFreq" aria-label="How often"></select>
       </div>
     </div>
-    <label class="field"><span class="label">Monthly investing goal</span><input id="investGoal" inputmode="decimal" placeholder="Optional"></label>
     <div class="field">
       <span class="label">Monthly spending budgets</span>
-      <p class="small" style="margin:0">Weekly budgets use 12/52 of these and yearly budgets use 12×. Leave blank for no budget.</p>
+      <p class="small" style="margin:0">Your plan fills these in. Weekly budgets use 12/52 of each, yearly budgets 12×.</p>
     </div>
     <div id="budRows" class="cats"></div>
     <label class="field"><span class="label">Currency symbol</span><input id="currency" maxlength="3"></label>
+    <div class="field">
+      <span class="label">Smart receipt reading (optional)</span>
+      <p class="small" style="margin:0">Without a key, receipts are read on your phone for free. That works best for the total and the store name. With a Claude API key, Claude reads each item and sorts it into categories. It costs about 1 cent per receipt, paid to Anthropic. Get a key at console.anthropic.com.</p>
+      <input id="apiKey" type="password" autocomplete="off" placeholder="sk-ant-…" aria-label="Claude API key">
+    </div>
     <button class="primary" type="submit">Save settings</button>
     <div class="field">
       <span class="label">Backup</span>
-      <p class="small" style="margin:0">Everything lives only on this phone. Save a backup now and then (to Files or iCloud Drive) so you can restore it.</p>
+      <p class="small" style="margin:0">Everything lives only on this phone. Save a backup now and then (to Files or iCloud Drive) so you can restore it. Backups never include your API key.</p>
       <div class="row2"><button type="button" class="ghost" id="exportBtn">Save backup</button>
         <label class="ghost" style="text-align:center;cursor:pointer">Restore backup<input type="file" id="importIn" accept="application/json,.json" hidden></label></div>
       <div class="err" id="backupMsg"></div>
@@ -233,6 +302,7 @@ const CATS = [
   { k: "transport", n: "Transport", c: "#3b7dd8" },
   { k: "housing", n: "Rent & home", c: "#7a5cc7" },
   { k: "bills", n: "Bills", c: "#4b8f99" },
+  { k: "debt", n: "Debt payments", c: "#8a6d5a" },
   { k: "shopping", n: "Shopping", c: "#c9507a" },
   { k: "health", n: "Health", c: "#c94a3a" },
   { k: "fun", n: "Fun", c: "#b39a1d" },
@@ -246,14 +316,16 @@ const SOURCES = [
 ];
 const CAT = Object.fromEntries([...CATS, ...SOURCES].map(c => [c.k, c]));
 const FACTOR = { week: 12 / 52, month: 1, year: 12 };
-const PAY_PER_MONTH = { weekly: 52 / 12, biweekly: 26 / 12, semimonthly: 2, monthly: 1, yearly: 1 / 12 };
-const KIND_TITLE = { expense: "New expense", income: "New income", invest: "New investment" };
+const FREQS = [["weekly", "Every week", 52 / 12], ["biweekly", "Every 2 weeks", 26 / 12], ["semimonthly", "Twice a month", 2], ["monthly", "Every month", 1], ["yearly", "Every year", 1 / 12]];
+const PAY_PER_MONTH = Object.fromEntries(FREQS.map(f => [f[0], f[2]]));
+const KEY_STORE = "pocket-ledger-apikey";
 
-let state = { expenses: [], settings: { currency: "$", monthly: {}, pay: null, investGoal: 0 }, period: "month", offset: 0, kind: "expense", sel: { expense: "groceries", income: "salary" } };
+let state = { expenses: [], settings: { currency: "$", monthly: {}, pay: null, plan: null }, period: "month", offset: 0, kind: "expense", sel: { expense: "groceries", income: "salary" } };
 let store = null;
 const kindOf = e => e.kind === "income" || e.kind === "invest" ? e.kind : "expense";
+const visible = () => state.expenses.filter(e => kindOf(e) !== "invest");
 
-// ---------- dates ----------
+// ---------- helpers ----------
 const pad = n => String(n).padStart(2, "0");
 const iso = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
@@ -279,7 +351,14 @@ function label(period, r) {
   return String(r.a.getFullYear());
 }
 const money = v => (v < 0 ? "−" : "") + state.settings.currency + (Math.round(Math.abs(v) * 100) / 100).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money0 = v => state.settings.currency + Math.round(v).toLocaleString();
 const sum = list => list.reduce((s, e) => s + e.amount, 0);
+const round2 = v => Math.round(v * 100) / 100;
+const toNum = s => { const v = parseFloat(String(s ?? "").replace(/[^0-9.,-]/g, "").replace(",", ".")); return isFinite(v) ? v : 0; };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const newId = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+const monthlyIncome = () => { const p = state.settings.pay; return p?.amount ? p.amount * PAY_PER_MONTH[p.freq] : 0; };
+const getKey = () => { try { return localStorage.getItem(KEY_STORE) || ""; } catch { return ""; } };
 
 // ---------- storage: this device ----------
 function localStore() {
@@ -290,8 +369,10 @@ function localStore() {
   const emit = () => { const d = read(); cb(d.expenses || [], d.settings); };
   return {
     subscribe(f) { cb = f; emit(); },
-    async addExpense(e) { const d = read(); (d.expenses ||= []).push(e); write(d); emit(); },
+    async addMany(list) { const d = read(); (d.expenses ||= []).push(...list); write(d); emit(); },
+    async addExpense(e) { return this.addMany([e]); },
     async removeExpense(id) { const d = read(); d.expenses = (d.expenses || []).filter(x => x.id !== id); write(d); emit(); },
+    async removeWhere(fn) { const d = read(); d.expenses = (d.expenses || []).filter(x => !fn(x)); write(d); emit(); },
     async saveSettings(s) { const d = read(); d.settings = s; write(d); emit(); },
   };
 }
@@ -302,38 +383,40 @@ const $ = id => document.getElementById(id);
 function render() {
   document.querySelectorAll(".seg button[data-p]").forEach(b => b.setAttribute("aria-pressed", b.dataset.p === state.period));
   const r = range(state.period, state.offset);
-  const list = state.expenses.filter(e => e.date >= r.from && e.date <= r.to);
-  const ex = list.filter(e => kindOf(e) === "expense"), inc = list.filter(e => kindOf(e) === "income"), inv = list.filter(e => kindOf(e) === "invest");
+  const all = visible();
+  const list = all.filter(e => e.date >= r.from && e.date <= r.to);
+  const ex = list.filter(e => kindOf(e) === "expense"), inc = list.filter(e => kindOf(e) === "income");
   $("when").textContent = label(state.period, r);
   $("next").disabled = state.offset >= 0;
   $("next").style.opacity = state.offset >= 0 ? .35 : 1;
 
-  const f = FACTOR[state.period];
-  const P = state.period;
-  const spent = sum(ex), invested = sum(inv), logged = sum(inc);
-  const pay = state.settings.pay;
-  const expected = pay?.amount ? pay.amount * PAY_PER_MONTH[pay.freq] * f : 0;
+  const f = FACTOR[state.period], P = state.period;
+  const plan = state.settings.plan;
+  const spent = sum(ex), logged = sum(inc);
+  const expected = monthlyIncome() * f;
   const usingExpected = !logged && expected > 0;
   const income = logged || expected;
-  const leftover = income - spent - invested;
+  const leftover = income - spent;
+  const saveTarget = plan ? plan.savings * f : 0;
 
-  // ---- cash flow ----
+  // ---- money card ----
   let pill;
-  if (!income) pill = `<span class="pill">Add your pay in Settings</span>`;
+  if (!income) pill = `<span class="pill">Add your pay</span>`;
   else if (leftover < 0) pill = `<span class="pill over">Short by ${money(-leftover)}</span>`;
-  else pill = `<span class="pill">In the green</span>`;
-  const w = v => income ? Math.max(0, Math.min(100, v / Math.max(income, spent + invested) * 100)) : 0;
+  else if (saveTarget && leftover < saveTarget) pill = `<span class="pill warn">${money(saveTarget - leftover)} under savings plan</span>`;
+  else pill = `<span class="pill">${saveTarget ? "On track to save" : "In the green"}</span>`;
+  const denom = Math.max(income, spent) || 1;
   $("summary").innerHTML = `
     <div class="section-head"><span class="label">Money this ${P}</span>${pill}</div>
-    <div><span class="tag">${leftover < 0 ? "Overspent" : "Left over"}</span><div class="big" style="color:${leftover < 0 ? "var(--over)" : "var(--ink)"}">${income ? money(leftover) : money(-spent - invested)}</div></div>
-    ${income ? `<div class="stack" aria-hidden="true"><i style="width:${w(spent)}%;background:var(--warn)"></i><i style="width:${w(invested)}%;background:var(--invest)"></i><i style="width:${w(Math.max(0, leftover))}%;background:var(--accent)"></i></div>
-    <div class="legend"><span><i class="dot" style="background:var(--warn)"></i>Spent</span><span><i class="dot" style="background:var(--invest)"></i>Invested</span><span><i class="dot" style="background:var(--accent)"></i>Left over</span></div>` : ""}
+    <div><span class="tag">${leftover < 0 ? "Overspent" : "Left over"}</span><div class="big" style="color:${leftover < 0 ? "var(--over)" : "var(--ink)"}">${money(income ? leftover : -spent)}</div></div>
+    ${income ? `<div class="stack" aria-hidden="true"><i style="width:${Math.min(100, spent / denom * 100)}%;background:var(--warn)"></i><i style="width:${Math.max(0, leftover) / denom * 100}%;background:var(--accent)"></i></div>` : ""}
     <div class="flow">
       <div class="in"><span class="label">Income${usingExpected ? " · expected" : ""}</span><b>${money(income)}</b>${logged && expected ? `<span class="small">${money(expected)} expected</span>` : ""}</div>
       <div><span class="label">Spent</span><b>${money(spent)}</b></div>
-      <div class="inv"><span class="label">Invested</span><b>${money(invested)}</b></div>
-      <div><span class="label">Savings rate</span><b>${income ? Math.round(invested / income * 100) + "%" : "—"}</b><span class="small">invested ÷ income</span></div>
-    </div>`;
+      ${plan ? `<div><span class="label">Plan: save</span><b>${money(saveTarget)}</b><span class="small">for your goals</span></div>` : ""}
+      <div><span class="label">Kept</span><b>${income ? Math.round(Math.max(0, leftover) / income * 100) + "%" : "—"}</b><span class="small">of your income</span></div>
+    </div>
+    ${!plan ? `<button type="button" class="plan-cta" data-open-plan><strong>Build my budget plan</strong><span class="small">Answer a few questions about your pay and goals</span></button>` : ""}`;
 
   // ---- spending budget ----
   const budget = Object.values(state.settings.monthly || {}).reduce((s, v) => s + (+v || 0), 0) * f;
@@ -346,7 +429,7 @@ function render() {
     <div class="num">${money(spent)} <span class="of">of ${money(budget)}</span></div>
     <div class="bar ${tone}"><i style="width:${Math.min(100, pct * 100)}%"></i></div>
     <div class="small">${bLeft >= 0 ? `${money(bLeft)} left` : `${money(-bLeft)} over`}${daysLeft > 0 && bLeft > 0 ? ` · ${money(bLeft / daysLeft)} a day for ${daysLeft} days` : ""}</div>`
-    : `<div class="section-head"><h2>Spending budget</h2><button type="button" class="link" data-open-settings>Set budgets</button></div><span class="small">No budgets yet. Set a monthly amount per category in Settings.</span>`;
+    : `<div class="section-head"><h2>Spending budget</h2><button type="button" class="link" data-open-plan>Build plan</button></div><span class="small">Your plan sets a budget for each category.</span>`;
 
   // ---- categories ----
   const byCat = {};
@@ -361,52 +444,43 @@ function render() {
       ${b ? `<div class="bar ${t}"><i style="width:${Math.min(100, p * 100)}%"></i></div>` : `<div class="bar"><i style="width:${spent ? s / spent * 100 : 0}%;background:${c.c};opacity:.6"></i></div>`}</div>`;
   }).join("") : `<p class="small" style="margin:0">Nothing spent in this ${P} yet.</p>`;
 
-  // ---- investments ----
-  const allInv = state.expenses.filter(e => kindOf(e) === "invest");
-  const goal = (+state.settings.investGoal || 0) * f;
-  const byAcct = {};
-  allInv.forEach(e => { const k = e.account || "Investments"; byAcct[k] = (byAcct[k] || 0) + e.amount; });
-  const accts = Object.entries(byAcct).sort((a, b) => b[1] - a[1]);
-  const gp = goal ? invested / goal : 0;
-  $("invest").innerHTML = `
-    <div class="flow">
-      <div class="inv"><span class="label">This ${P}</span><b>${money(invested)}</b>${goal ? `<span class="small">goal ${money(goal)}</span>` : ""}</div>
-      <div class="inv"><span class="label">Total put in</span><b>${money(sum(allInv))}</b><span class="small">all time</span></div>
-    </div>
-    ${goal ? `<div class="bar"><i style="width:${Math.min(100, gp * 100)}%;background:var(--invest)"></i></div>` : ""}
-    ${accts.length ? `<div class="cats">${accts.map(([a, v]) => `<div class="cat-row"><span>${esc(a)}</span><span class="num small">${money(v)}</span></div>`).join("")}</div>`
-      : `<span class="small">Log each deposit to your investment accounts with “+ Add”, then Investment.</span>`}`;
+  // ---- goals ----
+  $("goalsSection").hidden = !plan;
+  if (plan) {
+    $("goals").innerHTML = plan.goals.length ? plan.goals.map(g => `<div class="goal">
+        <div class="cat-row"><strong>${esc(g.name)}</strong><span class="num">${money0(g.monthly)}/mo</span></div>
+        <div class="small">${money0(g.target)} by ${fmtD(addMonths(parse(plan.start), g.months), { month: "short", year: "numeric" })}${g.stretched ? " · pushed back to fit your budget" : ""}</div></div>`).join("")
+      : `<div class="small">No goals yet. Set aside ${money0(plan.savings)} a month as savings.</div>`;
+  }
 
   // ---- activity ----
   $("count").textContent = list.length ? `${list.length} in this ${P}` : "";
-  if (!state.expenses.length) {
+  if (!all.length) {
     $("list").innerHTML = `<div class="empty"><strong>Nothing logged yet</strong>
-      <span class="small">Start in Settings: enter your pay and monthly budgets. Then tap “+ Add” for each purchase, paycheque or investment deposit.</span>
+      <span class="small">Tap “+ Add” for each purchase or paycheque, or scan a receipt.</span>
       <button type="button" class="ghost" id="loadSample">Try it with example data</button></div>`;
     $("loadSample").onclick = loadSample;
     return;
   }
   const days = {};
   list.slice().sort((a, b) => b.date.localeCompare(a.date) || (b.ts || 0) - (a.ts || 0)).forEach(e => (days[e.date] ||= []).push(e));
-  const hasSample = state.expenses.some(e => e.sample);
+  const hasSample = all.some(e => e.sample);
   $("list").innerHTML = (hasSample ? `<div class="banner"><span>Example entries are marked. Remove them when you start for real.</span><button type="button" class="link" id="clearSample">Remove examples</button></div>` : "") +
     (Object.keys(days).length ? Object.entries(days).map(([d, es]) => `<div class="day">
       <div class="day-head"><span class="label">${fmtD(parse(d), { weekday: "short", month: "short", day: "numeric" })}</span></div>
       ${es.map(itemHTML).join("")}
     </div>`).join("") : `<p class="small" style="margin:0">Nothing logged in this ${P}.</p>`);
-  if (hasSample) $("clearSample").onclick = async () => { for (const e of state.expenses.filter(e => e.sample)) await store.removeExpense(e.id); };
+  if (hasSample) $("clearSample").onclick = () => store.removeWhere(e => e.sample);
 }
 function itemHTML(e) {
   const k = kindOf(e);
-  const name = k === "invest" ? (e.account || "Investment") : (CAT[e.cat]?.n || "Other");
-  const color = k === "invest" ? "var(--invest)" : (CAT[e.cat]?.c || "#7f8c89");
-  const sign = k === "income" ? "+" : k === "invest" ? "→ " : "";
+  const name = CAT[e.cat]?.n || "Other";
   return `<div class="item" data-id="${e.id}" role="button" tabindex="0" aria-label="${esc(name)} ${money(e.amount)}. Tap for delete.">
-    <i class="dot" style="background:${color}"></i>
-    <span class="note">${esc(e.note || name)}${e.note ? ` <span class="small">· ${esc(name)}</span>` : ""}${e.sample ? `<span class="sample-tag">example</span>` : ""}</span>
-    <span class="num amt ${k}">${sign}${money(e.amount)}</span><button type="button" class="del" data-del="${e.id}">Delete</button></div>`;
+    <i class="dot" style="background:${CAT[e.cat]?.c || "#7f8c89"}"></i>
+    <span class="note">${e.receipt ? `<span class="rc-badge">receipt</span>` : ""}${esc(e.note || name)}${e.note ? ` <span class="small">· ${esc(name)}</span>` : ""}${e.sample ? `<span class="sample-tag">example</span>` : ""}</span>
+    <span class="num amt ${k}">${k === "income" ? "+" : ""}${money(e.amount)}</span><button type="button" class="del" data-del="${e.id}">Delete</button></div>`;
 }
-const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const addMonths = (d, n) => new Date(d.getFullYear(), d.getMonth() + Math.round(n), d.getDate());
 
 // ---------- interactions ----------
 document.querySelectorAll(".seg button[data-p]").forEach(b => b.onclick = () => { state.period = b.dataset.p; state.offset = 0; render(); });
@@ -419,7 +493,8 @@ $("list").addEventListener("click", ev => {
   if (it) { document.querySelectorAll(".item.open").forEach(x => x !== it && x.classList.remove("open")); it.classList.toggle("open"); }
 });
 $("list").addEventListener("keydown", ev => { if ((ev.key === "Enter" || ev.key === " ") && ev.target.classList.contains("item")) { ev.preventDefault(); ev.target.click(); } });
-document.addEventListener("click", ev => { if (ev.target.closest("[data-open-settings]")) $("openBudgets").click(); });
+document.addEventListener("click", ev => { if (ev.target.closest("[data-open-plan]")) openWizard(); });
+$("openPlan").onclick = openWizard;
 
 function openSheet(id) { $(id).hidden = false; }
 document.querySelectorAll("[data-close]").forEach(b => b.onclick = () => b.closest(".sheet-bg").hidden = true);
@@ -428,43 +503,40 @@ document.querySelectorAll(".sheet-bg").forEach(bg => bg.addEventListener("click"
 function drawAddForm() {
   const k = state.kind;
   document.querySelectorAll("[data-kind]").forEach(b => b.setAttribute("aria-pressed", b.dataset.kind === k));
-  $("addTitle").textContent = KIND_TITLE[k];
-  $("catField").hidden = k === "invest";
-  $("acctField").hidden = k !== "invest";
+  $("addTitle").textContent = k === "income" ? "New income" : "New expense";
+  $("scanBtn").hidden = k !== "expense";
   $("catLabel").textContent = k === "income" ? "Source" : "Category";
   const opts = k === "income" ? SOURCES : CATS;
   $("catChips").innerHTML = opts.map(c => `<button type="button" class="chip" data-k="${c.k}" aria-pressed="${c.k === state.sel[k]}"><i class="dot" style="background:${c.c}"></i>${c.n}</button>`).join("");
-  const accts = [...new Set(state.expenses.filter(e => kindOf(e) === "invest" && e.account).map(e => e.account))];
-  $("acctList").innerHTML = accts.map(a => `<option value="${esc(a)}"></option>`).join("");
-  $("addSave").textContent = k === "expense" ? "Save expense" : k === "income" ? "Save income" : "Save investment";
+  $("addSave").textContent = k === "income" ? "Save income" : "Save expense";
 }
 document.querySelectorAll("[data-kind]").forEach(b => b.onclick = () => { state.kind = b.dataset.kind; drawAddForm(); });
 $("catChips").addEventListener("click", e => { const b = e.target.closest(".chip"); if (b) { state.sel[state.kind] = b.dataset.k; drawAddForm(); } });
 $("fab").onclick = () => {
   $("curSym").textContent = state.settings.currency;
-  $("amt").value = ""; $("note").value = ""; $("acct").value = ""; $("addErr").textContent = "";
+  $("amt").value = ""; $("note").value = ""; $("addErr").textContent = "";
   $("date").value = iso(new Date());
-  drawAddForm(); openSheet("addSheet"); setTimeout(() => $("amt").focus(), 50);
+  state.kind = "expense"; drawAddForm(); openSheet("addSheet");
 };
 $("addForm").onsubmit = async e => {
   e.preventDefault();
-  const amount = parseFloat($("amt").value.replace(",", "."));
+  const amount = toNum($("amt").value);
   if (!(amount > 0)) { $("addErr").textContent = "Enter an amount above zero."; return; }
   if (!$("date").value) { $("addErr").textContent = "Pick a date."; return; }
   const k = state.kind;
-  const ex = { id: "e" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), kind: k, amount: Math.round(amount * 100) / 100, note: $("note").value.trim(), date: $("date").value, ts: Date.now() };
-  if (k === "invest") ex.account = $("acct").value.trim() || "Investments"; else ex.cat = state.sel[k];
   $("addSheet").hidden = true;
-  try { await store.addExpense(ex); } catch { showNote("That entry didn't save. Try adding it again."); }
+  try { await store.addExpense({ id: newId("e"), kind: k, amount: round2(amount), cat: state.sel[k], note: $("note").value.trim(), date: $("date").value, ts: Date.now() }); }
+  catch { showNote("That entry didn't save. Try adding it again."); }
 };
 
-const num = id => { const v = parseFloat($(id).value.replace(",", ".")); return v > 0 ? Math.round(v * 100) / 100 : 0; };
+// ---------- settings ----------
+$("payFreq").innerHTML = FREQS.map(f => `<option value="${f[0]}">${f[1]}</option>`).join("");
 $("openBudgets").onclick = () => {
   const s = state.settings;
   $("currency").value = s.currency;
   $("payAmt").value = s.pay?.amount || "";
   $("payFreq").value = s.pay?.freq || "biweekly";
-  $("investGoal").value = s.investGoal || "";
+  $("apiKey").value = getKey();
   $("budRows").innerHTML = CATS.map(c => `<label class="budget-row"><span style="display:flex;gap:8px;align-items:center"><i class="dot" style="background:${c.c}"></i>${c.n}</span>
     <input id="bud-${c.k}" inputmode="decimal" placeholder="—" value="${s.monthly?.[c.k] ?? ""}"></label>`).join("");
   openSheet("budSheet");
@@ -472,30 +544,341 @@ $("openBudgets").onclick = () => {
 $("budForm").onsubmit = async e => {
   e.preventDefault();
   const monthly = {};
-  CATS.forEach(c => { const v = num("bud-" + c.k); if (v) monthly[c.k] = v; });
-  const payAmt = num("payAmt");
+  CATS.forEach(c => { const v = round2(toNum($("bud-" + c.k).value)); if (v > 0) monthly[c.k] = v; });
+  const payAmt = round2(toNum($("payAmt").value));
+  try { const k = $("apiKey").value.trim(); k ? localStorage.setItem(KEY_STORE, k) : localStorage.removeItem(KEY_STORE); } catch {}
   $("budSheet").hidden = true;
-  try {
-    await store.saveSettings({ currency: $("currency").value.trim() || "$", monthly,
-      pay: payAmt ? { amount: payAmt, freq: $("payFreq").value } : null, investGoal: num("investGoal") });
-  } catch { showNote("Settings didn't save. Try again."); }
+  try { await store.saveSettings({ ...state.settings, currency: $("currency").value.trim() || "$", monthly, pay: payAmt > 0 ? { amount: payAmt, freq: $("payFreq").value } : null }); }
+  catch { showNote("Settings didn't save. Try again."); }
 };
+
+// ---------- budget plan wizard ----------
+const GOAL_PRESETS = [
+  { k: "emergency", n: "Emergency fund", hint: "3 months of costs" },
+  { k: "debt", n: "Pay off debt" },
+  { k: "home", n: "Buy a home", hint: "down payment" },
+  { k: "car", n: "Buy a car" },
+  { k: "travel", n: "Travel" },
+  { k: "education", n: "Education" },
+  { k: "retire", n: "Retirement" },
+  { k: "custom", n: "Something else" },
+];
+let wz = null;
+function openWizard() {
+  const s = state.settings, p = s.plan;
+  wz = {
+    step: 0,
+    pay: s.pay?.amount || "", freq: s.pay?.freq || "biweekly",
+    housing: p?.fixed?.housing ?? "", bills: p?.fixed?.bills ?? "", transport: p?.fixed?.transport ?? "", debt: p?.fixed?.debt ?? "",
+    goals: p?.goals?.map(g => ({ ...g })) || [],
+    result: null,
+  };
+  drawWizard(); openSheet("planSheet");
+}
+const WZ_STEPS = ["Your pay", "Your fixed costs", "Your goals", "Your plan"];
+function drawWizard() {
+  $("wzStep").textContent = `Step ${wz.step + 1} of 4 · ${WZ_STEPS[wz.step]}`;
+  $("wzErr").textContent = "";
+  $("wzBack").style.visibility = wz.step ? "visible" : "hidden";
+  $("wzNext").textContent = wz.step === 2 ? "Build my plan" : wz.step === 3 ? "Use this plan" : "Next";
+  const B = $("wzBody");
+  if (wz.step === 0) {
+    B.innerHTML = `<h2 class="wz-q">How much do you take home?</h2>
+      <p class="small">Your pay after tax, as it lands in your account.</p>
+      <label class="amount-in"><span>${esc(state.settings.currency)}</span><input id="wzPay" inputmode="decimal" placeholder="0" value="${wz.pay}" aria-label="Take-home pay"></label>
+      <div class="field"><span class="label">How often?</span><div class="chips">${FREQS.map(f => `<button type="button" class="chip" data-freq="${f[0]}" aria-pressed="${wz.freq === f[0]}">${f[1]}</button>`).join("")}</div></div>`;
+    B.querySelectorAll("[data-freq]").forEach(b => b.onclick = () => { wz.pay = $("wzPay").value; wz.freq = b.dataset.freq; drawWizard(); });
+  } else if (wz.step === 1) {
+    const row = (id, lbl, hint) => `<label class="budget-row"><span class="stackcol"><strong>${lbl}</strong><span class="small">${hint}</span></span><input id="wz-${id}" inputmode="decimal" placeholder="0" value="${wz[id]}"></label>`;
+    B.innerHTML = `<h2 class="wz-q">What do you pay each month no matter what?</h2>
+      <p class="small">Rough numbers are fine. Leave blank what doesn't apply.</p>
+      <div class="cats">${row("housing", "Rent or mortgage", "plus condo fees, home insurance")}${row("bills", "Bills", "phone, internet, power, subscriptions")}${row("transport", "Getting around", "car payment, insurance, gas, transit")}${row("debt", "Debt payments", "credit cards, loans")}</div>`;
+  } else if (wz.step === 2) {
+    B.innerHTML = `<h2 class="wz-q">What are you saving for?</h2>
+      <p class="small">Pick your goals, then set how much and by when.</p>
+      <div class="chips">${GOAL_PRESETS.map(g => `<button type="button" class="chip" data-goal="${g.k}" aria-pressed="${wz.goals.some(x => x.k === g.k)}">${g.n}</button>`).join("")}</div>
+      <div class="cats">${wz.goals.map((g, i) => `<div class="goal-edit">
+        <input class="goal-name" data-gi="${i}" data-f="name" value="${esc(g.name)}" aria-label="Goal name" maxlength="40">
+        <div class="row2"><label class="field"><span class="label">Amount</span><input data-gi="${i}" data-f="target" inputmode="decimal" placeholder="0" value="${g.target || ""}"></label>
+        <label class="field"><span class="label">In how many months</span><input data-gi="${i}" data-f="months" inputmode="numeric" placeholder="12" value="${g.months || ""}"></label></div></div>`).join("")}</div>`;
+    B.querySelectorAll("[data-goal]").forEach(b => b.onclick = () => {
+      readGoalInputs();
+      const k = b.dataset.goal, idx = wz.goals.findIndex(x => x.k === k);
+      if (idx >= 0) wz.goals.splice(idx, 1);
+      else {
+        const pre = GOAL_PRESETS.find(g => g.k === k);
+        const fixed = ["housing", "bills", "transport", "debt"].reduce((s, f) => s + toNum(wz[f]), 0);
+        wz.goals.push({ k, name: k === "custom" ? "" : pre.n, target: k === "emergency" && fixed ? Math.round(fixed * 3 / 100) * 100 + 600 : "", months: k === "emergency" ? 12 : k === "retire" ? 120 : "" });
+      }
+      drawWizard();
+    });
+  } else {
+    const p = wz.result;
+    B.innerHTML = `<h2 class="wz-q">Here's your monthly plan</h2>
+      <p class="small">Based on ${money0(p.income)} a month take-home.</p>
+      ${p.warning ? `<div class="banner warn-banner">${esc(p.warning)}</div>` : ""}
+      <div class="plan-split">
+        ${[["Fixed costs", p.fixedTotal, "var(--invest)"], ["Saving for goals", p.savings, "var(--accent)"], ["Everyday spending", p.flex, "var(--warn)"]].map(([n, v, c]) =>
+          `<div class="cat-row"><span><i class="dot" style="background:${c}"></i>${n}</span><span class="num">${money0(v)} <span class="small">${p.income ? Math.round(v / p.income * 100) : 0}%</span></span></div>`).join("")}
+        <div class="stack">${[[p.fixedTotal, "var(--invest)"], [p.savings, "var(--accent)"], [p.flex, "var(--warn)"]].map(([v, c]) => `<i style="width:${p.income ? Math.max(0, v) / p.income * 100 : 0}%;background:${c}"></i>`).join("")}</div>
+      </div>
+      <div class="field"><span class="label">Goals</span>${p.goals.length ? p.goals.map(g => `<div class="cat-row"><span class="stackcol">${esc(g.name)}<span class="small">${money0(g.target)} by ${fmtD(addMonths(new Date(), g.months), { month: "short", year: "numeric" })}${g.stretched ? " (pushed back to fit)" : ""}</span></span><span class="num">${money0(g.monthly)}/mo</span></div>`).join("")
+        : `<div class="cat-row"><span>General savings</span><span class="num">${money0(p.savings)}/mo</span></div>`}</div>
+      <div class="field"><span class="label">Monthly budget by category</span>${CATS.filter(c => p.budgets[c.k]).map(c => `<div class="cat-row"><span><i class="dot" style="background:${c.c}"></i>${c.n}</span><span class="num">${money0(p.budgets[c.k])}</span></div>`).join("")}</div>
+      <p class="small">You can change any budget later in Settings.</p>`;
+  }
+}
+function readGoalInputs() {
+  document.querySelectorAll("[data-gi]").forEach(inp => { const g = wz.goals[+inp.dataset.gi]; if (g) g[inp.dataset.f] = inp.value; });
+}
+function buildPlan() {
+  const income = toNum(wz.pay) * PAY_PER_MONTH[wz.freq];
+  const fixed = { housing: toNum(wz.housing), bills: toNum(wz.bills), transport: toNum(wz.transport), debt: toNum(wz.debt) };
+  const fixedTotal = fixed.housing + fixed.bills + fixed.transport + fixed.debt;
+  const avail = income - fixedTotal;
+  let warning = "";
+  let goals = wz.goals.map(g => ({ k: g.k, name: (g.name || "").trim() || "My goal", target: toNum(g.target), months: Math.max(1, Math.round(toNum(g.months) || 12)) }))
+    .filter(g => g.target > 0).map(g => ({ ...g, monthly: g.target / g.months }));
+  let savings;
+  if (avail <= 0) {
+    warning = "Your fixed costs are more than your pay, so there's nothing left to plan with. Check the numbers, or look for a fixed cost you can cut.";
+    goals = goals.map(g => ({ ...g, monthly: 0, stretched: true })); savings = 0;
+  } else {
+    const cap = avail * 0.5; // keep at least half of what's left for everyday life
+    const want = goals.reduce((s, g) => s + g.monthly, 0);
+    if (!goals.length) savings = Math.min(income * 0.2, cap);
+    else if (want <= cap) savings = want;
+    else {
+      const scale = cap / want;
+      goals = goals.map(g => ({ ...g, monthly: g.monthly * scale, months: Math.ceil(g.target / (g.monthly * scale)), stretched: true }));
+      savings = cap;
+      warning = "Your goals add up to more than you can comfortably save, so some target dates were pushed back.";
+    }
+  }
+  const flex = Math.max(0, avail - savings);
+  const share = { groceries: .34, dining: .14, shopping: .14, fun: .14, health: .1, other: .14 };
+  const budgets = { housing: fixed.housing, bills: fixed.bills, transport: fixed.transport, debt: fixed.debt };
+  Object.entries(share).forEach(([k, s]) => budgets[k] = flex * s);
+  Object.keys(budgets).forEach(k => { budgets[k] = Math.round(budgets[k]); if (!budgets[k]) delete budgets[k]; });
+  goals = goals.map(g => ({ ...g, monthly: Math.round(g.monthly) }));
+  return { income, fixed, fixedTotal, savings: Math.round(savings), flex: Math.round(flex), goals, budgets, warning };
+}
+$("wzBack").onclick = () => { if (wz.step === 2) readGoalInputs(); if (wz.step > 0) { wz.step--; drawWizard(); } };
+$("planForm").onsubmit = async e => {
+  e.preventDefault();
+  const err = m => { $("wzErr").textContent = m; };
+  if (wz.step === 0) {
+    wz.pay = $("wzPay").value;
+    if (!(toNum(wz.pay) > 0)) return err("Enter your take-home pay.");
+  } else if (wz.step === 1) {
+    ["housing", "bills", "transport", "debt"].forEach(k => wz[k] = $("wz-" + k).value);
+  } else if (wz.step === 2) {
+    readGoalInputs();
+    if (wz.goals.some(g => !(toNum(g.target) > 0))) return err("Enter an amount for each goal, or tap the goal again to remove it.");
+    wz.result = buildPlan();
+  } else {
+    const p = wz.result;
+    $("planSheet").hidden = true;
+    await store.saveSettings({ ...state.settings, pay: { amount: round2(toNum(wz.pay)), freq: wz.freq }, monthly: p.budgets,
+      plan: { start: iso(new Date()), fixed: p.fixed, savings: p.savings, goals: p.goals.map(({ k, name, target, months, monthly, stretched }) => ({ k, name, target, months, monthly, stretched: !!stretched })) } });
+    return;
+  }
+  wz.step++; drawWizard();
+};
+
+// ---------- receipts ----------
+$("scanBtn").onclick = () => $("receiptIn").click();
+$("receiptIn").onchange = async () => {
+  const file = $("receiptIn").files[0]; $("receiptIn").value = "";
+  if (!file) return;
+  $("addSheet").hidden = true;
+  $("rcBody").hidden = true; $("rcErr").textContent = "";
+  const url = URL.createObjectURL(file); $("rcImg").src = url;
+  openSheet("rcSheet");
+  const status = t => $("rcStatus").innerHTML = t;
+  let result;
+  try {
+    const jpeg = await shrink(file, 1600);
+    if (getKey()) { status(`<span class="spinner"></span> Claude is reading your receipt…`); result = await readWithClaude(jpeg); }
+    else { status(`<span class="spinner"></span> Reading your receipt…<br><span class="small">The first scan loads the reader, so it can take a moment.</span>`); result = await readOnPhone(jpeg, p => status(`<span class="spinner"></span> Reading your receipt… ${Math.round(p * 100)}%`)); }
+  } catch (e) {
+    result = { merchant: "", date: "", total: 0, items: [] };
+    status(`<span class="err">${esc(e.message || "Couldn't read that photo.")} Fill it in below.</span>`);
+  }
+  if (result.items.length || result.total) status(`<span class="small">Check the lines below and fix anything that looks wrong.</span>`);
+  else if (!$("rcStatus").querySelector(".err")) status(`<span class="err">Couldn't find any prices. Try a flatter, brighter photo, or fill it in below.</span>`);
+  rc = { ...result, items: result.items.length ? result.items : [{ name: result.merchant || "", amount: result.total || "", cat: guessCat(result.merchant, "") }] };
+  $("rcStore").value = rc.merchant || "";
+  $("rcDate").value = /^\d{4}-\d{2}-\d{2}$/.test(rc.date || "") ? rc.date : iso(new Date());
+  drawRcItems(); $("rcBody").hidden = false;
+};
+let rc = null;
+function drawRcItems() {
+  $("rcItems").innerHTML = rc.items.map((it, i) => `<div class="rc-row">
+    <input data-ri="${i}" data-f="name" value="${esc(it.name)}" placeholder="Item" aria-label="Item name">
+    <input data-ri="${i}" data-f="amount" inputmode="decimal" value="${it.amount === "" ? "" : round2(+it.amount).toFixed(2)}" placeholder="0.00" aria-label="Price" class="rc-amt">
+    <select data-ri="${i}" data-f="cat" aria-label="Category">${CATS.map(c => `<option value="${c.k}" ${c.k === it.cat ? "selected" : ""}>${c.n}</option>`).join("")}</select>
+    <button type="button" class="rc-x" data-rx="${i}" aria-label="Remove line">×</button></div>`).join("");
+  drawRcTotal();
+}
+function readRc() { document.querySelectorAll("[data-ri]").forEach(inp => { const it = rc.items[+inp.dataset.ri]; if (it) it[inp.dataset.f] = inp.dataset.f === "amount" ? inp.value : inp.value; }); }
+function drawRcTotal() {
+  const items = rc.items.reduce((s, it) => s + toNum(it.amount), 0);
+  const extra = rc.total > items + .005 ? rc.total - items : 0;
+  $("rcTotal").innerHTML = `<div class="cat-row"><span>Items</span><span class="num">${money(items)}</span></div>` +
+    (extra ? `<div class="cat-row small"><span>Tax, tip and fees (spread across items)</span><span class="num">${money(extra)}</span></div>` : "") +
+    `<div class="cat-row"><strong>Total</strong><strong class="num">${money(items + extra)}</strong></div>`;
+}
+$("rcItems").addEventListener("input", () => { readRc(); drawRcTotal(); });
+$("rcItems").addEventListener("change", () => { readRc(); drawRcTotal(); });
+$("rcItems").addEventListener("click", e => { const x = e.target.closest("[data-rx]"); if (x) { readRc(); rc.items.splice(+x.dataset.rx, 1); drawRcItems(); } });
+$("rcAddItem").onclick = () => { readRc(); rc.items.push({ name: "", amount: "", cat: rc.items[0]?.cat || "other" }); drawRcItems(); };
+$("rcForm").onsubmit = async e => {
+  e.preventDefault(); readRc();
+  const items = rc.items.map(it => ({ ...it, amount: toNum(it.amount) })).filter(it => it.amount > 0);
+  if (!items.length) { $("rcErr").textContent = "Add at least one line with a price."; return; }
+  const itemsSum = items.reduce((s, it) => s + it.amount, 0);
+  const scale = rc.total > itemsSum + .005 ? rc.total / itemsSum : 1;
+  const by = {};
+  items.forEach(it => (by[it.cat] ||= []).push(it));
+  const store_ = $("rcStore").value.trim(), date = $("rcDate").value || iso(new Date());
+  const rid = newId("r");
+  const entries = Object.entries(by).map(([cat, its]) => ({
+    id: newId("e"), kind: "expense", cat, date, ts: Date.now(), receipt: rid,
+    amount: round2(its.reduce((s, it) => s + it.amount, 0) * scale),
+    note: store_ || its.map(i => i.name).filter(Boolean).slice(0, 2).join(", "),
+    items: its.map(i => ({ name: i.name, amount: round2(i.amount) })),
+  }));
+  $("rcSheet").hidden = true;
+  try { await store.addMany(entries); } catch { showNote("The receipt didn't save. Try again."); }
+};
+
+function shrink(file, max) {
+  return new Promise((res, rej) => {
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const c = document.createElement("canvas"); c.width = Math.round(img.width * s); c.height = Math.round(img.height * s);
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(b => b ? res(b) : rej(new Error("Couldn't open that photo.")), "image/jpeg", 0.85);
+    };
+    img.onerror = () => rej(new Error("Couldn't open that photo."));
+    img.src = URL.createObjectURL(file);
+  });
+}
+const blobToB64 = b => new Promise(r => { const fr = new FileReader(); fr.onload = () => r(String(fr.result).split(",")[1]); fr.readAsDataURL(b); });
+
+async function readWithClaude(blob) {
+  const schema = {
+    type: "object", additionalProperties: false, required: ["merchant", "date", "total", "items"],
+    properties: {
+      merchant: { type: "string" }, date: { type: "string" }, total: { type: "number" },
+      items: { type: "array", items: { type: "object", additionalProperties: false, required: ["name", "amount", "category"],
+        properties: { name: { type: "string" }, amount: { type: "number" }, category: { type: "string", enum: CATS.map(c => c.k) } } } },
+    },
+  };
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-api-key": getKey(), "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true", "anthropic-beta": "server-side-fallback-2026-07-01" },
+    body: JSON.stringify({
+      model: "claude-opus-5-5", max_tokens: 4000, fallbacks: "default",
+      output_config: { effort: "low", format: { type: "json_schema", schema } },
+      messages: [{ role: "user", content: [
+        { type: "image", source: { type: "base64", media_type: "image/jpeg", data: await blobToB64(blob) } },
+        { type: "text", text: `Read this receipt for a personal expense tracker.
+merchant: the store or restaurant name. date: purchase date as YYYY-MM-DD, or "" if not shown. total: the final amount paid, including tax and tip.
+items: each purchased line with its price (after any line discount). Leave out subtotal, tax, tip, total, payment and change lines.
+category for each item, one of: ${CATS.map(c => `${c.k} (${c.n})`).join(", ")}. At a restaurant, cafe or bar, every item is "dining". Food from a grocery store is "groceries". Household goods, clothes and electronics are "shopping". Gas and parking are "transport". Medicine and pharmacy items are "health".
+If the photo isn't a receipt, return empty items and total 0.` },
+      ] }],
+    }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) throw new Error("Your Claude API key was rejected. Check it in Settings.");
+  if (!res.ok) throw new Error(data?.error?.message ? `Claude couldn't read it: ${data.error.message}.` : "Claude couldn't read it right now.");
+  if (data.stop_reason === "refusal") throw new Error("Claude declined to read that photo.");
+  const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+  const out = JSON.parse(text);
+  return { merchant: out.merchant, date: out.date, total: +out.total || 0,
+    items: out.items.filter(i => i.amount > 0).map(i => ({ name: i.name, amount: i.amount, cat: CAT[i.category] ? i.category : "other" })) };
+}
+
+// free on-phone reading: Tesseract OCR + simple rules
+let tessP = null;
+function loadTesseract() {
+  return tessP ||= new Promise((res, rej) => {
+    const s = document.createElement("script");
+    s.src = "ocr/tesseract.min.js";
+    s.onload = () => res(window.Tesseract);
+    s.onerror = () => { tessP = null; rej(new Error("Couldn't load the receipt reader. Check your internet connection.")); };
+    document.head.appendChild(s);
+  });
+}
+async function readOnPhone(blob, onProgress) {
+  const T = await loadTesseract();
+  const abs = p => new URL(p, location.href).href;
+  const { data } = await T.recognize(blob, "eng", { workerPath: abs("ocr/worker.min.js"), corePath: abs("ocr/core"), langPath: abs("ocr/lang"),
+    logger: m => m.status === "recognizing text" && onProgress(m.progress) });
+  return parseReceiptText(data.text || "");
+}
+const MERCHANT_CATS = [
+  [/restaurant|resto|cafe|café|coffee|starbucks|tim horton|mcdonald|burger|pizza|sushi|grill|bistro|bar\b|pub\b|kitchen|diner|taco|subway|wendy|a&w|kfc|popeyes|chipotle|thai|pho|ramen|bakery|boulangerie/i, "dining"],
+  [/grocery|grocer|market|loblaw|no frills|sobeys|metro\b|safeway|kroger|whole foods|food basics|freshco|iga\b|superstore|trader joe|aldi|maxi|provigo|save.?on|fortinos|zehrs/i, "groceries"],
+  [/shell|esso|petro|chevron|husky|gas bar|fuel|parking|uber|lyft|transit|presto/i, "transport"],
+  [/pharma|drug|shoppers|rexall|jean coutu|london drugs|walgreens|cvs|clinic|dental/i, "health"],
+  [/cinema|theatre|theater|cineplex|steam|playstation|xbox|ticket/i, "fun"],
+  [/amazon|best buy|winners|h&m|zara|ikea|canadian tire|home depot|dollarama|marshalls|old navy|gap\b|apple store/i, "shopping"],
+];
+const ITEM_CATS = [
+  [/milk|bread|egg|cheese|yogurt|butter|apple|banana|fruit|veg|chicken|beef|pork|fish|rice|pasta|cereal|juice|coffee|tea|snack|chips|meat|produce|tomato|potato|onion|lettuce|berr|flour|sugar|oil|sauce|soup|frozen|organic|deli/i, "groceries"],
+  [/shampoo|hand soap|tooth|vitamin|tylenol|advil|medic|bandage|pharm|rx\b/i, "health"],
+  [/dish|shirt|pant|sock|shoe|towel|lamp|cable|charger|batter|kitchenware|detergent|paper towel|toilet|cleaner|trash bag/i, "shopping"],
+  [/gas|fuel|unleaded|diesel|parking/i, "transport"],
+];
+function guessCat(merchant, item) {
+  for (const [re, c] of MERCHANT_CATS) if (re.test(merchant || "")) { if (c !== "groceries" || !item) return c; break; }
+  for (const [re, c] of ITEM_CATS) if (re.test(item || "")) return c;
+  for (const [re, c] of MERCHANT_CATS) if (re.test(merchant || "")) return c;
+  return "other";
+}
+function parseReceiptText(text) {
+  const lines = text.split(/\n/).map(l => l.replace(/\s+/g, " ").trim()).filter(Boolean);
+  const merchant = (lines.find(l => /[a-z]{3,}/i.test(l) && !/^\d/.test(l) && !/receipt|welcome|thank/i.test(l)) || "").replace(/[^\w&'.\- ]/g, "").trim().slice(0, 40);
+  let date = "";
+  for (const l of lines) {
+    let m = l.match(/\b(20\d{2})[-\/.](\d{1,2})[-\/.](\d{1,2})\b/);
+    if (m) { date = `${m[1]}-${pad(+m[2])}-${pad(+m[3])}`; break; }
+    m = l.match(/\b(\d{1,2})[-\/.](\d{1,2})[-\/.](20\d{2}|\d{2})\b/);
+    if (m) { const y = m[3].length === 2 ? "20" + m[3] : m[3]; let a = +m[1], b = +m[2]; if (a > 12) [a, b] = [b, a]; date = `${y}-${pad(a)}-${pad(b)}`; break; }
+  }
+  if (date && (isNaN(parse(date)) || parse(date) > new Date(Date.now() + 864e5))) date = "";
+  const priceRe = /(-?\$?\s?\d{1,5}[.,]\d{2})\s*[A-Z*]{0,2}\s*$/;
+  const skip = /sub.?total|\btax\b|hst|gst|pst|qst|vat|change|cash|visa|master|debit|credit|amex|balance|tender|payment|card|approved|auth|points|saving|you saved|rounding|\btip\b|gratuity/i;
+  let total = 0; const items = [];
+  for (const l of lines) {
+    const m = l.match(priceRe); if (!m) continue;
+    const amt = toNum(m[1]);
+    if (/\btotal\b|amount due|grand total|to pay/i.test(l) && !/sub.?total/i.test(l)) { if (amt > total) total = amt; continue; }
+    if (skip.test(l) || amt <= 0 || amt > 5000) continue;
+    const name = l.slice(0, m.index).replace(/^[\d\s#x@*]+/, "").replace(/\s+\d+\s*@.*$/, "").trim().slice(0, 40);
+    items.push({ name, amount: amt, cat: guessCat(merchant, name) });
+  }
+  const isDining = guessCat(merchant, "") === "dining";
+  let out = items;
+  if (isDining || !items.length) out = (total || items.length) ? [{ name: merchant || "Receipt", amount: total || sum(items), cat: guessCat(merchant, "") }] : [];
+  if (!total) total = sum(out);
+  return { merchant, date, total, items: out };
+}
 
 async function loadSample() {
   const t = new Date(); const day = n => { const d = new Date(t); d.setDate(t.getDate() - n); return iso(d); };
   const rows = [[0, "groceries", 64.2, "Weekly shop"], [0, "dining", 6.5, "Coffee"], [1, "transport", 48, "Gas"], [2, "dining", 32.8, "Dinner out"],
     [3, "bills", 85, "Phone plan"], [4, "shopping", 39.99, "Shoes"], [6, "groceries", 52.75, ""], [8, "fun", 18, "Movie"], [10, "health", 22.4, "Pharmacy"], [12, "housing", 1250, "Rent"]];
   let i = 0;
-  const add = e => store.addExpense({ id: "s" + (i++) + Date.now().toString(36), ts: Date.now() - i, sample: true, note: "", ...e });
-  for (const [d, cat, amount, note] of rows) await add({ kind: "expense", amount, cat, note, date: day(d) });
-  await add({ kind: "income", amount: 2150, cat: "salary", date: day(2) });
-  await add({ kind: "income", amount: 2150, cat: "salary", date: day(16) });
-  await add({ kind: "invest", amount: 300, account: "TFSA", date: day(2) });
-  await add({ kind: "invest", amount: 150, account: "RRSP", date: day(9) });
-  const s = state.settings;
-  await store.saveSettings({ ...s,
-    monthly: Object.keys(s.monthly || {}).length ? s.monthly : { groceries: 450, dining: 150, transport: 200, housing: 1250, bills: 180, shopping: 100, fun: 80, health: 60 },
-    pay: s.pay || { amount: 2150, freq: "biweekly" }, investGoal: s.investGoal || 500 });
+  const mk = e => ({ id: "s" + (i++) + Date.now().toString(36), ts: Date.now() - i, sample: true, note: "", ...e });
+  await store.addMany([...rows.map(([d, cat, amount, note]) => mk({ kind: "expense", amount, cat, note, date: day(d) })),
+    mk({ kind: "income", amount: 2150, cat: "salary", date: day(2) }), mk({ kind: "income", amount: 2150, cat: "salary", date: day(16) })]);
 }
 
 // ---------- boot ----------
@@ -503,20 +886,21 @@ function attach(s) {
   store = s;
   s.subscribe((expenses, settings) => {
     state.expenses = expenses.map(e => ({ ...e, amount: +e.amount || 0 }));
-    if (settings) state.settings = { currency: settings.currency || "$", monthly: settings.monthly || {}, pay: settings.pay || null, investGoal: +settings.investGoal || 0 };
+    if (settings) state.settings = { currency: settings.currency || "$", monthly: settings.monthly || {}, pay: settings.pay || null, plan: settings.plan || null };
     render();
   });
 }
 render();
 attach(localStore());
 try { navigator.storage?.persist?.(); } catch {}
-if (!matchMedia("(display-mode: standalone)").matches && !navigator.standalone)
-  showNote('To install: tap Share, then “Add to Home Screen”.');
+const installed = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
+if (!installed) showNote('To install: tap Share, then “Add to Home Screen”.');
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+if (!state.settings.plan) openWizard();
 
 // ---------- backup ----------
 $("exportBtn").onclick = () => {
-  const data = JSON.stringify({ app: "pocket-ledger", v: 2, expenses: state.expenses, settings: state.settings }, null, 1);
+  const data = JSON.stringify({ app: "pocket-ledger", v: 3, expenses: state.expenses, settings: state.settings }, null, 1);
   const file = new File([data], `pocket-ledger-backup-${iso(new Date())}.json`, { type: "application/json" });
   if (navigator.canShare?.({ files: [file] })) { navigator.share({ files: [file] }).catch(() => {}); return; }
   const a = document.createElement("a"); a.href = URL.createObjectURL(file); a.download = file.name; a.click();
